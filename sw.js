@@ -1,4 +1,4 @@
-const C="herb-demo-v1",F=["./","index.html","manifest.json","icon.svg","icon-192.png","icon-512.png",
+const C="herb-demo-v2",F=["./","index.html","manifest.json","icon.svg","icon-192.png","icon-512.png",
   "vendor/ort.min.js","vendor/ort-wasm-simd.wasm","vendor/ort-wasm-simd-threaded.wasm","vendor/ocr_det.onnx","vendor/ocr_rec.onnx","vendor/ocr_keys.json"];
 self.addEventListener("install",e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(F)).then(()=>self.skipWaiting()))});
 self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==C).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});
@@ -9,6 +9,7 @@ const iso=r=>{if(!r||r.type==="opaque"||!r.status)return r;const h=new Headers(r
 self.addEventListener("fetch",e=>{
   if(e.request.method!=="GET")return;
   const page=e.request.mode==="navigate",key=page?"index.html":e.request;
+  if(/\/vendor\//.test(e.request.url)){e.respondWith(caches.match(e.request,{ignoreSearch:true}).then(c=>c||fetch(e.request).then(r=>{if(r.ok){const x=r.clone();e.waitUntil(caches.open(C).then(y=>y.put(e.request,x)))}return r})).then(iso));return}
   e.respondWith(fetch(e.request).then(r=>{if(r.ok&&!new URL(e.request.url).search||r.ok&&page){const c=r.clone();e.waitUntil(caches.open(C).then(x=>x.put(key,c)))}return r})
     .catch(()=>caches.match(key,{ignoreSearch:true})).then(iso));
 });
