@@ -1,0 +1,1529 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2f6b3a">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg">
+<title>藥材庫存（示範版）</title>
+<style>
+:root{--g:#2f6b3a;--g2:#e8f1ea;--bg:#f6f7f5;--tx:#1b1f1c;--mu:#6b736d;--rd:#c0392b;--or:#d98324;--bd:#dde2dd;--ok:#1e8449}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font:16px/1.4 system-ui,"Noto Sans TC",sans-serif;background:var(--bg);color:var(--tx);padding-bottom:70px}
+header{background:var(--g);color:#fff;padding:12px 16px;font-weight:600;font-size:18px;position:sticky;top:0;z-index:5}
+main{padding:12px;max-width:640px;margin:0 auto}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:#fff;border-top:1px solid var(--bd);z-index:5}
+nav button{flex:1;border:0;background:none;padding:12px 0;font-size:14px;color:var(--mu)}
+nav button.on{color:var(--g);font-weight:700;border-top:3px solid var(--g);padding-top:9px}
+button,input,select,textarea{font:inherit}
+.btn{background:var(--g);color:#fff;border:0;border-radius:10px;padding:12px 16px;font-weight:600;white-space:nowrap;flex-shrink:0}
+.btn.s{background:#fff;color:var(--g);border:1px solid var(--g)}
+.btn.d{background:var(--rd)}
+.btn.sm{padding:6px 10px;font-size:14px;border-radius:8px}
+.btn:disabled{opacity:.5}
+.card{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:10px}
+.row{display:flex;align-items:center;gap:8px}
+.wrap{flex-wrap:wrap}
+.grow{flex:1;min-width:0}
+.mu{color:var(--mu);font-size:13px}
+input[type=text],input[type=search],input[type=number],input[type=date],select,textarea{width:100%;padding:10px;border:1px solid var(--bd);border-radius:10px;background:#fff}
+label.mu{display:block;margin:10px 0 4px}
+.tag{display:inline-block;font-size:12px;padding:1px 7px;border-radius:99px;margin-left:4px;color:#fff;background:#888}
+.t-red{background:var(--rd)}.t-or{background:var(--or)}.t-ok{background:var(--ok)}
+.toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:#333;color:#fff;padding:10px 18px;border-radius:99px;z-index:60;font-size:15px;max-width:90vw}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;z-index:20}
+.sheet{background:#fff;width:100%;max-width:640px;max-height:92vh;overflow:auto;border-radius:16px 16px 0 0;padding:16px}
+h3{margin:4px 0 10px}
+.dn{color:var(--rd)}.ok{color:var(--ok)}.or{color:var(--or)}
+.prog{height:6px;background:var(--g2);border-radius:4px;overflow:hidden;margin:6px 0 10px}
+.prog>div{height:100%;background:var(--g)}
+.sug{border:1px solid var(--bd);border-radius:10px;margin-top:4px;overflow:hidden}
+.sug div{padding:10px;border-bottom:1px solid var(--bd)}
+.sug div:last-child{border-bottom:0}
+.sugf{position:fixed;z-index:80;background:#fff;max-height:40vh;overflow:auto;box-shadow:0 4px 14px rgba(0,0,0,.18);margin:0}
+/* 相機 */
+#cam{position:fixed;inset:0;background:#000;z-index:40;display:flex;flex-direction:column}
+#cam .ttl{color:#fff;padding:10px 14px;font-weight:600}
+#cam .vw{position:relative;flex:1;overflow:hidden}
+#cam video,#cam .ghost{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+#cam .ghost{opacity:.4;pointer-events:none}
+#cam .bar{display:flex;justify-content:space-around;align-items:center;padding:14px 10px 22px}
+#cam .shut{width:72px;height:72px;border-radius:50%;border:5px solid #fff;background:#ddd}
+#cam .fr{position:absolute;width:60px;height:60px;border:2px solid #ffeb3b;border-radius:8px;display:none;pointer-events:none}
+#cam .fc{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);color:#fff;padding:8px 12px;font-size:14px}
+#cam .fc input{accent-color:#8bc34a}
+#cam .zb{padding:4px 8px;font-size:13px}
+#cam .cb{background:none;border:1px solid #fff;color:#fff;border-radius:10px;padding:8px 12px}
+@media (orientation:landscape){#cam{flex-direction:row}#cam .ttl{position:absolute;top:0;left:0;z-index:2;background:rgba(0,0,0,.45);padding:6px 12px}
+  #cam .bar{flex-direction:column;padding:10px 16px;gap:8px}#cam .shut{width:64px;height:64px}}
+/* 框選 */
+.ed{position:relative;touch-action:none;user-select:none}
+.ed img{width:100%;display:block;border-radius:8px}
+.ed canvas{position:absolute;inset:0;width:100%;height:100%}
+#edw{overflow:auto;max-height:72vh;border-radius:8px}
+.edz{display:flex;gap:6px;align-items:center;margin-bottom:6px}
+.edz .on{background:var(--g);color:#fff}
+/* 確認表 */
+.ct{width:100%;border-collapse:collapse;font-size:15px}
+.ct td{padding:10px 4px;border-bottom:1px solid var(--bd)}
+.ct td.n{text-align:right;white-space:nowrap}
+.ct tr.red{background:#fdecea}
+.ph{width:100%;border-radius:8px;display:block;margin-bottom:8px}
+</style>
+</head>
+<body>
+<header id="hd">藥材庫存（示範版）</header>
+<main id="app"></main>
+<nav id="nav"></nav>
+<input type="file" id="pick" accept="image/*" hidden>
+<script src="vendor/ort.min.js"></script>
+<script>
+"use strict";
+/* ========== 基本工具 ========== */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-3);
+const pad=n=>String(n).padStart(2,"0");
+const ymd=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const today=()=>ymd(new Date());
+const addDays=(s,n)=>{const d=new Date(s+"T00:00:00");d.setDate(d.getDate()+n);return ymd(d)};
+function toast(t,ms=2200){const d=document.createElement("div");d.className="toast";d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),ms)}
+function sheet(html){const m=document.createElement("div");m.className="modal";m.innerHTML=`<div class="sheet">${html}</div>`;document.body.appendChild(m);return m}
+
+/* ========== 設定值（規格第 9 節） ========== */
+const SAFE=10, PLENTY=30, EXP_WARN_DAYS=183, SHELF_YEARS=3, KEEP_DAYS=14;
+
+/* ========== 資料 ========== */
+/* D = { items:[{id,name,unit,safe,exp}], skus:[{id,item,vendor,qty,mode,hist:[{d,q}]}],
+         batches:[{id,sku,qty,exp,photo,d}], spots:[{id,name,ord,photo,regions:[...] ,conf}],
+         shots:[{d,spot,photo}], counts:[{d,q:{skuId:qty}}], sess:null|{start,done:{}} , lastCount } */
+const KEY="herb_inv_v2", V1KEY="herb_inv_v1";
+let D=load();
+function blank(){return{items:[],skus:[],batches:[],spots:[],shots:[],counts:[],recv:[],moves:[],ships:[],alias:{},sess:null,lastCount:""}}
+function load(){
+  try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.items)return s}catch(e){}
+  const d=blank();
+  try{const v1=JSON.parse(localStorage.getItem(V1KEY));if(v1&&v1.items&&v1.items.length){importV1(d,v1);d.fromV1=v1.items.length}}catch(e){}
+  return d;
+}
+function fix(){D.recv=D.recv||[];D.moves=D.moves||[];D.supBrand=D.supBrand||{};D.ships=D.ships||[];D.alias=D.alias||{};D.ocrFix=D.ocrFix||{};D.slipQ=D.slipQ||[];
+  for(const i of D.items)if(i.loc==="冷藏庫")i.loc="樓下";
+  /* 樓下暫時不追蹤數量：舊出貨單裡樓下品項的「帳不夠」不算 */
+  for(const r of D.ships)for(const l of r.lines)if(!l.skip&&!l.down&&l.took<l.n&&l.fix===undefined){const k=D.skus.find(x=>x.id===l.sku);if(k&&itemOf(k).loc==="樓下")l.down=1}
+  for(const r of D.recv)if(r.sup==null){r.sup=r.vendor||"";for(const l of r.lines){const k=D.skus.find(x=>x.id===l.sku);if(k&&!k.sup)k.sup=r.sup}}
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){alert("儲存失敗：空間不足？請先匯出備份")}}
+function importV1(d,v1){
+  for(const o of v1.items){
+    if(!o.name)continue;
+    let it=d.items.find(i=>i.name===o.name);
+    if(!it){it={id:uid(),name:o.name,unit:"包",safe:o.safe>0?o.safe:SAFE,exp:true};d.items.push(it)}
+    if(d.skus.some(s=>s.item===it.id&&s.vendor===(o.brand||"")))continue;
+    d.skus.push({id:uid(),item:it.id,vendor:o.brand||"",qty:o.qty||0,mode:"photo",hist:[]});
+  }
+  for(const n of ["小只袋","中只袋","大只袋","特大袋","加大袋","訂做袋"])
+    if(!d.items.some(i=>i.name===n)){const it={id:uid(),name:n,unit:"只",safe:SAFE,exp:false};d.items.push(it);d.skus.push({id:uid(),item:it.id,vendor:"",qty:0,mode:"photo",hist:[]})}
+}
+/* 包＝一斤裝（或一包）；只＝包材；兩＝高貴藥材（西紅花）；盒＝阿膠這類；罐＝黃連丸這類成藥 */
+const UNITS=["包","只","兩","盒","罐"];
+const itemOf=s=>D.items.find(i=>i.id===s.item)||{name:"?",unit:"包",safe:SAFE};
+const skuName=s=>itemOf(s).name+(s.vendor?"（"+s.vendor+"）":"");
+const unitOf=s=>itemOf(s).unit||"包";
+function fifo(k){const bs=D.batches.filter(b=>b.sku===k.id&&b.qty>0).sort((a,b)=>(a.exp||"9")<(b.exp||"9")?-1:(a.exp||"9")>(b.exp||"9")?1:a.d<b.d?-1:1);
+  let over=bs.reduce((t,b)=>t+b.qty,0)-k.qty;for(const b of bs){if(over<=0)break;const n=Math.min(b.qty,over);b.qty-=n;over-=n}}
+function snap(s){fifo(s);const d=today();s.hist=s.hist||[];const h=s.hist[s.hist.length-1];if(h&&h.d===d)h.q=s.qty;else s.hist.push({d,q:s.qty})}
+
+/* ========== 照片（IndexedDB） ========== */
+let _db;
+function db(){return _db||(_db=new Promise((ok,no)=>{const r=indexedDB.open("herb_v2",1);r.onupgradeneeded=()=>r.result.createObjectStore("p");r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)}))}
+async function pstore(mode,fn){const d=await db();return new Promise((ok,no)=>{const t=d.transaction("p",mode);const r=fn(t.objectStore("p"));t.oncomplete=()=>ok(r&&r.result);t.onerror=()=>no(t.error)})}
+async function pput(blob){const id=uid();await pstore("readwrite",s=>s.put({b:blob,t:Date.now()},id));return id}
+async function pget(id){if(!id)return null;const v=await pstore("readonly",s=>s.get(id));return v?v.b:null}
+const pdel=id=>pstore("readwrite",s=>s.delete(id));
+const _urls={};
+async function purl(id){if(!id)return"";if(_urls[id])return _urls[id];const b=await pget(id);return b?(_urls[id]=URL.createObjectURL(b)):""}
+
+/* ========== 影像工具 ========== */
+/* 給 max 就在解碼時直接縮小：這支手機（2GB）畫超過約 1500×2000 的 canvas 會變全黑，系統相機的 3000×4000 照片不能先畫再縮 */
+async function blobImg(b,max){const im=await createImageBitmap(b,{imageOrientation:"from-image"});
+  if(!max||Math.max(im.width,im.height)<=max)return im;
+  const w=Math.round(im.width*max/Math.max(im.width,im.height));im.close&&im.close();
+  return await createImageBitmap(b,{imageOrientation:"from-image",resizeWidth:w,resizeQuality:"high"})}
+/* 縮圖：每次最多縮一半、高品質平滑（一次縮太多，字會糊掉、辨識變差） */
+function toCanvas(img,max,gray){
+  const s=Math.min(1,max/Math.max(img.width,img.height)),W=Math.round(img.width*s),H=Math.round(img.height*s);
+  let src=img,w=img.width,h=img.height;
+  while(w/2>W){const c=document.createElement("canvas");c.width=Math.round(w/2);c.height=Math.round(h/2);const x=c.getContext("2d");x.imageSmoothingQuality="high";x.drawImage(src,0,0,c.width,c.height);src=c;w=c.width;h=c.height}
+  const c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");x.imageSmoothingQuality="high";if(gray)x.filter="grayscale(1)";x.drawImage(src,0,0,W,H);return c;
+}
+const cBlob=(c,q=.82)=>new Promise(r=>c.toBlob(r,"image/jpeg",q));
+function gray(img,w){const c=toCanvas(img,Math.max(w,w*img.height/img.width));const W=c.width,H=c.height,px=c.getContext("2d").getImageData(0,0,W,H).data,g=new Float32Array(W*H);for(let i=0;i<W*H;i++)g[i]=.299*px[i*4]+.587*px[i*4+1]+.114*px[i*4+2];return{w:W,h:H,g}}
+function gradMap(G){const{w,h,g}=G,o=new Float32Array(w*h);for(let y=0;y<h-1;y++)for(let x=0;x<w-1;x++){const i=y*w+x;o[i]=Math.abs(g[i+1]-g[i])+Math.abs(g[i+w]-g[i])}return{w,h,g:o}}
+
+/* 對齊：找出「上次照片座標 → 這次照片座標」的縮放＋位移（邊緣圖的相關係數，先粗後細） */
+function blur3(G){const{w,h,g}=G,o=new Float32Array(w*h);for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){let s=0;for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++)s+=g[(y+j)*w+x+i];o[y*w+x]=s/9}return{w,h,g:o}}
+function ncc(A,B,s,tx,ty){
+  /* 先算好每一欄、每一列對到 B 的哪個位置，內圈只剩查表 */
+  const{w,h}=A,cx=new Int32Array(w),ry=new Int32Array(h);
+  for(let x=0;x<w;x++){const bx=Math.round(((x/w-.5)*s+.5+tx)*B.w);cx[x]=bx<0||bx>=B.w?-1:bx}
+  for(let y=0;y<h;y++){const by=Math.round(((y/h-.5)*s+.5+ty)*B.h);ry[y]=by<0||by>=B.h?-1:by*B.w}
+  let x0=0,x1=w;while(x0<w&&cx[x0]<0)x0++;while(x1>x0&&cx[x1-1]<0)x1--;
+  let sa=0,sb=0,saa=0,sbb=0,sab=0,n=0;const ag=A.g,bg=B.g;
+  for(let y=0;y<h;y++){const r=ry[y];if(r<0)continue;const o=y*w;
+    for(let x=x0;x<x1;x++){const a=ag[o+x],b=bg[r+cx[x]];sa+=a;sb+=b;saa+=a*a;sbb+=b*b;sab+=a*b}n+=x1-x0}
+  if(n<w*h*.55)return-1;const d=Math.sqrt((saa-sa*sa/n)*(sbb-sb*sb/n));return d?(sab-sa*sb/n)/d:-1;
+}
+/* 由粗到細三層：64 寬找大概位置（可容許上下左右差 20%、遠近差 12%），128、192 寬再修正 */
+function align(imgA,imgB){
+  const map=w=>[blur3(gradMap(gray(imgA,w))),blur3(gradMap(gray(imgB,w)))];
+  let [a,b]=map(64),best={s:1,tx:0,ty:0,c:ncc(a,b,1,0,0)};
+  for(let s=.88;s<=1.121;s+=.02)for(let tx=-.2;tx<=.201;tx+=1/40)for(let ty=-.2;ty<=.201;ty+=1/40){const c=ncc(a,b,s,tx,ty);if(c>best.c)best={s,tx,ty,c}}
+  for(const[w,st,ss,k]of[[128,1/128,.004,4],[192,1/192,.002,2]]){[a,b]=map(w);const o=best;best={...o,c:ncc(a,b,o.s,o.tx,o.ty)};
+    for(let i=-3;i<=3;i++)for(let dx=-k;dx<=k;dx++)for(let dy=-k;dy<=k;dy++){const s=o.s+i*ss,tx=o.tx+dx*st,ty=o.ty+dy*st,c=ncc(a,b,s,tx,ty);if(c>best.c)best={s,tx,ty,c}}}
+  return{s:best.s,tx:best.tx,ty:best.ty,good:best.c>.6};
+}
+const mapRect=(r,T)=>({x:(r.x-.5)*T.s+.5+T.tx,y:(r.y-.5)*T.s+.5+T.ty,w:r.w*T.s,h:r.h*T.s});
+
+/* 堆高：框內由上往下找第一段「有袋子紋路」的地方，回傳堆高占框高的比例 */
+function stackHeight(G,r){
+  const x0=Math.max(1,Math.round(r.x*G.w)),x1=Math.min(G.w-2,Math.round((r.x+r.w)*G.w));
+  const y0=Math.max(1,Math.round(r.y*G.h)),y1=Math.min(G.h-2,Math.round((r.y+r.h)*G.h));
+  const H=y1-y0;if(H<8||x1-x0<4)return 0;
+  const sc=[];
+  for(let y=y0;y<y1;y++){let s=0;for(let x=x0;x<x1;x++){const i=y*G.w+x;s+=Math.abs(G.g[i+1]-G.g[i-1])+Math.abs(G.g[i+G.w]-G.g[i-G.w])}sc.push(s/(x1-x0))}
+  const sm=sc.map((v,i)=>(v+(sc[i-1]??v)+(sc[i+1]??v))/3);
+  const sorted=[...sm].sort((a,b)=>a-b);const thr=Math.max(6,sorted[Math.floor(sorted.length*.9)]*.4);
+  const k=Math.max(2,Math.round(H*.04));
+  for(let i=0;i<sm.length-k;i++){let all=true;for(let j=0;j<k;j++)if(sm[i+j]<=thr){all=false;break}if(all)return(sm.length-i)/sm.length}
+  return 0;
+}
+const MEASURE_W=480;
+/* 左右並排好幾疊（r.cols）：框切成幾段分別量，各段跟自己的基準比，再平均。
+   這樣只拿走其中一疊的幾包也量得到，不用一疊畫一個框 */
+const stripOf=(r,i,n)=>({x:r.x+r.w*i/n,y:r.y,w:r.w/n,h:r.h});
+function setBase(G,r){r.h0=stackHeight(G,r);const n=r.cols||1;if(n>1)r.h0s=[...Array(n)].map((_,i)=>stackHeight(G,stripOf(r,i,n)));else delete r.h0s}
+function ratioOf(G,r,nr){const n=r.cols||1;
+  if(n>1&&r.h0s&&r.h0s.length===n){let s=0,c=0;for(let i=0;i<n;i++)if(r.h0s[i]>.03){s+=stackHeight(G,stripOf(nr,i,n))/r.h0s[i];c++}if(c)return s/c}
+  return r.h0>.03?stackHeight(G,nr)/r.h0:null}
+
+/* ========== 相機（App 內） ========== */
+let pickCb=null;
+$("pick").onchange=e=>{const f=e.target.files[0];e.target.value="";if(pickCb){const cb=pickCb;pickCb=null;cb(f||null)}};
+function pickFile(){return new Promise(r=>{pickCb=r;$("pick").click()})}
+/* 手機內建相機 App（對焦、畫質最好；拍完回到這裡） */
+function sysCam(){return new Promise(r=>{const i=document.createElement("input");i.type="file";i.accept="image/*";i.capture="environment";i.onchange=()=>r(i.files[0]||null);i.click()})}
+/* App 內相機。這支舊手機的網頁相機不給自動對焦（只有手動），所以給對焦滑桿＋放大倍率，並依用途（標籤／貨架）記住上次的設定。
+   快門用 ImageCapture 拍靜態照（2592×1944），失敗才截預覽畫面 */
+const camPref=k=>{try{return JSON.parse(localStorage.getItem("herb_cam_"+k))||{}}catch(e){return{}}};
+const camSave=(k,o)=>{try{localStorage.setItem("herb_cam_"+k,JSON.stringify(o))}catch(e){}};
+/* 這支手機要先全螢幕才能轉向（全螢幕要在按按鈕的當下開）；回直式＝離開全螢幕，回到 manifest 的直式 */
+async function orient(land){try{
+  if(!land){if(document.fullscreenElement)await document.exitFullscreen();return true}
+  if(!document.fullscreenElement)await document.documentElement.requestFullscreen({navigationUI:"hide"});
+  await screen.orientation.lock("landscape");return true}catch(e){return false}}
+/* 速度紀錄（只留最近 30 筆，給之後找哪裡慢） */
+const perf=(k,ms)=>{try{const a=JSON.parse(localStorage.herb_perf||"[]");a.push([k,Math.round(ms),new Date().toTimeString().slice(0,5)]);localStorage.herb_perf=JSON.stringify(a.slice(-30))}catch(e){}};
+/* multi：連拍，每拍一張交給 multi(畫面 canvas)、相機不關，回傳的字換成標題；按「完成」才關 */
+/* raw：盤點用，直接回傳畫面 canvas（.blobP 是背後壓好的 JPEG）；這支手機壓一張 JPEG 要 5–13 秒，不能卡在按快門之後 */
+function camera(title,ghostUrl,kind="shelf",land=false,multi=null,raw=false){
+  return new Promise(async done=>{
+    const v=document.createElement("div");v.id="cam";
+    v.innerHTML=`<div class="ttl">${esc(title)}</div><div class="vw"><video playsinline muted autoplay></video>${ghostUrl?`<img class="ghost" src="${ghostUrl}">`:""}<div class="fr"></div>
+    <div class="fc" hidden><div class="row"><span>對焦</span><span class="mu" style="color:#ccc">近</span><input type="range" id="cfd" class="grow"><span class="mu" style="color:#ccc">遠</span></div>
+    <div class="row" style="margin-top:6px"><span>放大</span>${[1,1.5,2,3].map(z=>`<button class="cb zb" data-z="${z}">${z}×</button>`).join("")}<span class="mu grow" style="color:#ccc;text-align:right">拉到字最清楚</span></div></div></div>
+    <div class="bar"><button class="cb" data-a="x">${multi?"完成":"取消"}</button>${ghostUrl?`<button class="cb" data-a="g">疊影</button>`:""}<button class="shut" data-a="s"></button><button class="cb" data-a="d" style="background:#2f6b3a">示範照片</button>${kind==="shelf"?`<button class="cb" data-a="o">${land?"直拍":"橫拍"}</button>`:""}<button class="cb" data-a="t" hidden>補光</button>${multi?"":`<button class="cb" data-a="c">系統相機</button><button class="cb" data-a="f">相簿</button>`}</div>`;
+    document.body.appendChild(v);
+    const video=v.querySelector("video"),fr=v.querySelector(".fr");let stream=null,track=null,caps={},busy=false;
+    const end=b=>{if(stream)stream.getTracks().forEach(t=>t.stop());v.remove();orient(false);done(b)};
+    /* 按快門：先關相機畫面，再在背後壓 JPEG（這支手機壓一張要幾百毫秒） */
+    const endLater=async p=>{if(stream)stream.getTracks().forEach(t=>t.stop());v.remove();orient(false);done(await p)};
+    const t0=performance.now();video.addEventListener("playing",()=>perf("開相機 "+kind,performance.now()-t0),{once:true});
+    orient(land);
+    try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1440}},audio:false});video.srcObject=stream}
+    catch(e){toast("沒有相機，可以按「示範照片」",4000);stream=null}
+    track=stream&&stream.getVideoTracks()[0];try{caps=track.getCapabilities?track.getCapabilities():{}}catch(e){}
+    const focus=async(x,y)=>{try{
+      if(x!=null&&caps.pointsOfInterest!==undefined)await track.applyConstraints({advanced:[{pointsOfInterest:[{x,y}],focusMode:(caps.focusMode||[]).includes("single-shot")?"single-shot":"continuous"}]});
+      else if((caps.focusMode||[]).includes("continuous"))await track.applyConstraints({advanced:[{focusMode:"continuous"}]});
+    }catch(e){}};
+    focus();
+    /* 手動對焦＋放大 */
+    const pref=camPref(kind),fc=v.querySelector(".fc"),fd=v.querySelector("#cfd");
+    const ap=async o=>{try{await track.applyConstraints({advanced:[o]})}catch(e){}};
+    if(caps.focusDistance&&!(caps.focusMode||[]).includes("continuous")){
+      fc.hidden=false;const{min,max,step}=caps.focusDistance;fd.min=min;fd.max=max;fd.step=step||.01;
+      /* 先用上次的位置；第一次用：標籤靠近（偏近端），貨架偏遠 */
+      fd.value=pref.fd??(kind!=="shelf"?min+(max-min)*.25:max*.9);ap({focusMode:"manual",focusDistance:+fd.value});
+      fd.oninput=()=>{ap({focusMode:"manual",focusDistance:+fd.value});pref.fd=+fd.value;camSave(kind,pref)};
+    }
+    /* 出貨單、貨架：這支手機的瀏覽器沒有自動對焦，自己試幾個對焦位置、挑最清楚的（打開時一次，點畫面再一次）；拉桿收起來。
+       貨架每層距離差不多：有上次的位置就只在附近試（快），點畫面才整段重試 */
+    let af=null;
+    if(kind!=="label"&&caps.focusDistance&&!(caps.focusMode||[]).includes("continuous")){
+      fc.querySelector(".row").hidden=true;const hint=fc.querySelector(".mu.grow");if(hint)hint.textContent="點畫面重新對焦";
+      const sc=document.createElement("canvas"),sx=sc.getContext("2d",{willReadFrequently:true});
+      /* 清楚度：畫面中間那塊相鄰像素差的平方和，字越銳利越大。
+         直接從 video 畫到 canvas 再讀回來，這支手機一次要 0.7 秒；先轉成縮小的 ImageBitmap 只要 0.03 秒 */
+      const sharp=async()=>{const vw=video.videoWidth,vh=video.videoHeight;if(!vw)return 0;const W=240,H=Math.round(W*vh/vw);
+        const bm=await createImageBitmap(video,vw*.2,vh*.2,vw*.6,vh*.6,{resizeWidth:W,resizeHeight:H,resizeQuality:"medium"});sc.width=W;sc.height=H;sx.drawImage(bm,0,0);bm.close();
+        const p=sx.getImageData(0,0,W,H).data;let s=0;for(let y=0;y<H-1;y++)for(let x=0;x<W-1;x++){const i=(y*W+x)*4,g=p[i+1],a=g-p[i+5],b=g-p[i+W*4+1];s+=a*a+b*b}return s};
+      const at=async f=>{await ap({focusMode:"manual",focusDistance:f});await new Promise(r=>setTimeout(r,180));let s=await sharp();if(!s){await new Promise(r=>setTimeout(r,250));s=await sharp()}(window._afLog=window._afLog||[]).push([+f.toFixed(3),s]);return s};
+      af=(full)=>{if(af.on||!document.body.contains(v))return af.p;af.on=true;window._afLog=[];const t=v.querySelector(".ttl"),t0=t.textContent;t.textContent="對焦中…";
+        return af.p=(async()=>{try{const ta=performance.now(),{min,max}=caps.focusDistance,n=6,st=(max-min)/n;let best=+fd.value,bs=-1;
+          const near=!full&&kind==="shelf"&&pref.fd!=null,pts=near?[-2,-1,0,1,2].map(i=>best+st*i/2):[...Array(n+1)].map((_,i)=>min+st*i);
+          for(const f of pts){if(f<min-1e-6||f>max+1e-6)continue;const s=await at(Math.min(max,Math.max(min,f)));if(s>bs){bs=s;best=Math.min(max,Math.max(min,f))}}
+          for(const f of[best-st/4*(near?1:2),best+st/4*(near?1:2)]){if(f<min||f>max)continue;const s=await at(f);if(s>bs){bs=s;best=f}}
+          await ap({focusMode:"manual",focusDistance:best});fd.value=best;pref.fd=best;camSave(kind,pref);perf("對焦 "+kind,performance.now()-ta)}
+        catch(e){}finally{af.on=false;if(t.textContent==="對焦中…")t.textContent=t0}})()};
+      if(video.videoWidth)setTimeout(af,300);else video.addEventListener("playing",()=>setTimeout(af,300),{once:true});
+    }
+    if(caps.zoom){fc.hidden=false;const setZ=z=>{z=Math.min(caps.zoom.max,Math.max(caps.zoom.min,z));ap({zoom:z});v.querySelectorAll(".zb").forEach(b=>b.style.background=+b.dataset.z===z?"#2f6b3a":"none");pref.z=z;camSave(kind,pref)};
+      v.querySelectorAll(".zb").forEach(b=>b.onclick=e=>{e.stopPropagation();setZ(+b.dataset.z)});setZ(pref.z||1)}
+    else v.querySelectorAll(".zb").forEach(b=>b.remove());
+    /* 補光：手電筒常亮，相機會照亮後再測光（閃光燈一閃常拍成全黑） */
+    const tb=v.querySelector('[data-a="t"]');
+    const setT=on=>{ap({torch:on});tb.style.background=on?"#2f6b3a":"none";pref.torch=on;camSave(kind,pref)};
+    if(caps.torch){tb.hidden=false;if(pref.torch)setT(true)}
+    video.onclick=e=>{const b=video.getBoundingClientRect(),x=(e.clientX-b.left)/b.width,y=(e.clientY-b.top)/b.height;
+      fr.style.cssText=`left:${e.clientX-b.left-30}px;top:${e.clientY-b.top-30}px;display:block`;setTimeout(()=>fr.style.display="none",900);if(af)af(true);else focus(x,y)};
+    /* 按下快門馬上有反應：畫面閃白、震一下，先畫出來再做事（不然取畫面那一下卡住，看起來像沒按到） */
+    const flash=async sb=>{sb.style.background="#888";if(navigator.vibrate)navigator.vibrate(40);
+      const f=document.createElement("div");f.style.cssText="position:absolute;inset:0;background:#fff;opacity:.8;transition:opacity .35s;pointer-events:none";v.querySelector(".vw").appendChild(f);
+      await new Promise(r=>requestAnimationFrame(()=>setTimeout(r,16)));f.style.opacity="0";setTimeout(()=>f.remove(),400)};
+    v.onclick=async e=>{const a=e.target.dataset.a;if(!a||busy)return;
+      if(a==="x")end(null);
+      else if(a==="o"){land=!land;const ok=await orient(land);if(land&&!ok){land=false;toast("轉不過來，請直接把手機橫著拍");return}e.target.textContent=land?"直拍":"橫拍"}
+      else if(a==="t")setT(!pref.torch);
+      else if(a==="g"){const g=v.querySelector(".ghost");g.style.opacity=g.style.opacity==="0"?".4":"0"}
+      else if(a==="f"){const f=await pickFile();if(f)end(f)}
+      else if(a==="c"){const f=await sysCam();if(f)end(f)}
+      else if(a==="d"){busy=true;const dc=await demoShot(kind);busy=false;
+        if(multi){const bm=await createImageBitmap(dc);v.querySelector(".ttl").textContent=multi(bm)||title;const sb=v.querySelector(".shut");sb.textContent=(+sb.textContent||0)+1;sb.style.cssText+=";font-size:26px;font-weight:700;color:#2f6b3a"}
+        else if(raw){dc.blobP=cBlob(dc,.82);end(dc)}else end(await cBlob(dc,.9))}
+      else if(a==="s"&&af&&af.on){busy=true;await af.p;busy=false;e.target.click()}
+      else if(a==="s"&&multi){if(!video.videoWidth)return;busy=true;const sb=e.target;await flash(sb);
+        const vw=video.videoWidth,vh=video.videoHeight,sc=Math.min(1,1600/Math.max(vw,vh));
+        const c=await createImageBitmap(video,{resizeWidth:Math.round(vw*sc),resizeHeight:Math.round(vh*sc),resizeQuality:"high"});
+        v.querySelector(".ttl").textContent=multi(c)||title;sb.textContent=(+sb.textContent||0)+1;sb.style.cssText+=";font-size:26px;font-weight:700;color:#2f6b3a";
+        setTimeout(()=>{sb.style.background="";busy=false},150)}
+      else if(a==="s"){if(!video.videoWidth)return;busy=true;await flash(e.target);const ts=performance.now();
+        /* 貨架照、出貨單直接取畫面（快很多）；標籤照才用高解析拍照，字比較清楚 */
+        if(window.ImageCapture&&kind==="label"){try{const b=await new ImageCapture(track).takePhoto();
+          if(b&&b.size){const im=await blobImg(b),same=(im.width>im.height)===(video.videoWidth>video.videoHeight);im.close&&im.close();if(same){end(b);return}}}catch(err){}}
+        const c=document.createElement("canvas");c.width=video.videoWidth;c.height=video.videoHeight;c.getContext("2d").drawImage(video,0,0);
+        /* 直接縮到存檔大小，只壓一次 JPEG */
+        if(raw){const cc=toCanvas(c,1600);cc.blobP=cBlob(cc,.82).then(b=>{perf("壓照片",performance.now()-ts);return b});perf("快門 raw",performance.now()-ts);endLater(Promise.resolve(cc));return}
+        endLater((kind==="label"?cBlob(c,.92):cBlob(toCanvas(c,1600),.82)).then(b=>{perf("快門 "+kind,performance.now()-ts);return b}))}};
+  });
+}
+async function shrinkBlob(b,max=1600,q=.82){const im0=await blobImg(b);if(Math.max(im0.width,im0.height)<=max){im0.close&&im0.close();return b}im0.close&&im0.close();
+  const im=await blobImg(b,max),c=toCanvas(im,max);im.close&&im.close();return cBlob(c,q)}
+
+/* ========== 標籤日期（本機辨識） ========== */
+const SEP="\\s*[年./\\-]\\s*";
+/* 前面緊貼英文的是批號（YF20250301），不算日期；辨識常掉分隔符（2026/0827、202607/29），後半段容許只有一個 */
+const RE_AD=new RegExp("(?<![\\dA-Za-z])(20[2-4]\\d)(?:"+SEP+"|\\s+)(\\d{1,2})(?:\\s*[月./\\-]\\s*|\\s+)(\\d{1,2})(?!\\d)|(?<![\\dA-Za-z])(20[2-4]\\d)[./\\-]?(\\d{2})[./\\-]?(\\d{2})(?!\\d)","g");
+const RE_ROC=new RegExp("(?<![\\dA-Za-z])(1[1-3]\\d)"+SEP+"(\\d{1,2})\\s*[月./\\-]\\s*(\\d{1,2})","g");
+const RE_ROCK=/(?:有效|製造|日期)[^\d]{0,4}(1[1-3]\d)(\d{2})(\d{2})(?!\d)/g;
+/* 找出文字裡所有日期，連同位置（用來看前面是「有效」還是「製造」） */
+function datesAt(t){
+  t=t.replace(/[Oo]/g,"0").replace(/[lI]/g,"1");const c=[];
+  for(const m of t.matchAll(RE_AD))c.push([m.index,...(m[1]?[+m[1],+m[2],+m[3]]:[+m[4],+m[5],+m[6]])]);
+  for(const m of [...t.matchAll(RE_ROC),...t.matchAll(RE_ROCK)])c.push([m.index+m[0].indexOf(m[1]),+m[1]+1911,+m[2],+m[3]]);
+  return{t,ds:c.filter(([,y,m,d])=>{const x=new Date(y,m-1,d);return x.getMonth()===m-1&&x.getDate()===d&&y>=2015&&y<=2045}).map(([i,y,m,d])=>({i,d:y+"-"+pad(m)+"-"+pad(d)}))};
+}
+const datesIn=t=>datesAt(t).ds.map(x=>x.d);
+const RE_EXPK=/有效|保存期|到期|期限|EXP|Exp|exp|BB|賞味/,RE_MFGK=/製造|造日期|生產|出廠|包裝日|MFG|Mfg|PRD|製/;
+const plusYears=(d,n)=>{const[y,m,dd]=d.split("-");return(+y+n)+"-"+m+"-"+dd};
+/* 製造日＋保存年限，減一天（A牌標籤就是這樣印的；其他家差一天也比較保守） */
+const mfgToExp=(d,n)=>addDays(plusYears(d,n),-1);
+const CNUM={一:1,二:2,兩:2,三:3,四:4,五:5};
+function shelfYears(t){const m=t.match(/(?:有效|保存|保友|期限|期間)(?:期限|期間|日期)?\s*[:：]?\s*([一二兩三四五]|[1-5])\s*年/);return m?(CNUM[m[1]]||+m[1]):SHELF_YEARS}
+/* 判讀有效日期：
+   1. 日期前面（同一段、約 12 字內）寫「有效／保存期限／到期／EXP」→ 就是它
+   2. 只找到寫「製造／生產／MFG」的日期 → 有其他更晚的日期就用那個，不然製造日＋3 年
+   3. 都沒有關鍵字 → 用最晚的日期；只有一個而且已經過去 → 當製造日＋3 年
+   最後檢查：有效日期不該早於一年前、不該晚於 10 年後 */
+const dateTag=(t,x)=>{const pre=t.slice(Math.max(0,x.i-12),x.i);const e=pre.search(RE_EXPK),f=pre.search(RE_MFGK);return e<0&&f<0?"":e>f?"exp":"mfg"};
+function pickExp(t,ds){
+  if(!ds.length)return"";
+  const all=ds.map(x=>({...x,k:dateTag(t,x)})),sorted=[...all].sort((a,b)=>a.d<b.d?-1:1);
+  const lo=addDays(today(),-365),hi=plusYears(today(),10),ok=d=>d>=lo&&d<=hi;
+  const ex=sorted.filter(x=>x.k==="exp"&&ok(x.d));if(ex.length)return ex.at(-1).d;
+  const mf=sorted.filter(x=>x.k==="mfg");
+  if(mf.length){const m=mf.at(-1).d,later=sorted.filter(x=>x.d>m&&ok(x.d));return later.length?later.at(-1).d:mfgToExp(m,shelfYears(t))}
+  const mx=sorted.at(-1).d;if(new Set(sorted.map(x=>x.d)).size===1&&mx<=today())return mfgToExp(mx,shelfYears(t));
+  return ok(mx)?mx:"";
+}
+const expFrom=ds=>pickExp("",ds.map((d,i)=>({d,i})));
+/* 文字辨識：PP-OCRv3（vendor/ocr_*）跑在 onnxruntime-web，完全離線。手機 4 執行緒要 crossOriginIsolated（sw.js 加標頭），沒有就退回單執行緒 */
+let _ocr=null,_ocrQ=Promise.resolve();
+function ocrEngine(){return _ocr||(_ocr=(async()=>{
+  ort.env.wasm.wasmPaths="vendor/";ort.env.wasm.numThreads=crossOriginIsolated?Math.min(+localStorage.ocrThr||8,navigator.hardwareConcurrency||1):1;
+  const opt={executionProviders:["wasm"]};
+  const det=await ort.InferenceSession.create("vendor/ocr_det.onnx",opt),rec=await ort.InferenceSession.create("vendor/ocr_rec.onnx",opt);
+  return{det,rec,keys:await(await fetch("vendor/ocr_keys.json")).json()};
+})().catch(e=>{_ocr=null;throw e}))}
+function rotCanvas(c,rot){if(!rot)return c;const cv=document.createElement("canvas"),sw=rot%180!==0;cv.width=sw?c.height:c.width;cv.height=sw?c.width:c.height;const x=cv.getContext("2d");x.translate(cv.width/2,cv.height/2);x.rotate(rot*Math.PI/180);x.drawImage(c,-c.width/2,-c.height/2);return cv}
+function ocrPixels(im,w,h,sx,sy,sw,sh,mean,std){
+  const c=document.createElement("canvas");c.width=w;c.height=h;const x=c.getContext("2d",{willReadFrequently:true});x.drawImage(im,sx,sy,sw,sh,0,0,w,h);
+  const p=x.getImageData(0,0,w,h).data,a=new Float32Array(3*w*h);
+  /* 模型要 BGR、通道分開 */
+  for(let i=0;i<w*h;i++)for(let k=0;k<3;k++)a[k*w*h+i]=(p[i*4+2-k]/255-mean[k])/std[k];
+  return new ort.Tensor("float32",a,[1,3,h,w]);
+}
+/* 找出每一行字的方框，由上到下 */
+async function ocrBoxes(E,im,limit=640){
+  const sc=Math.min(1,limit/Math.max(im.width,im.height)),w=Math.max(32,Math.round(im.width*sc/32)*32),h=Math.max(32,Math.round(im.height*sc/32)*32);
+  const t=ocrPixels(im,w,h,0,0,im.width,im.height,[.406,.456,.485],[.225,.224,.229]);
+  const m=(await E.det.run({[E.det.inputNames[0]]:t}))[E.det.outputNames[0]].data,lab=new Uint8Array(w*h),out=[],fx=im.width/w,fy=im.height/h;
+  for(let i=0;i<w*h;i++){if(m[i]<=.3||lab[i])continue;const st=[i];lab[i]=1;let n=0,sum=0,x0=w,y0=h,x1=0,y1=0;
+    while(st.length){const j=st.pop(),xx=j%w,yy=(j/w)|0;n++;sum+=m[j];if(xx<x0)x0=xx;if(xx>x1)x1=xx;if(yy<y0)y0=yy;if(yy>y1)y1=yy;
+      for(const k of[xx>0?j-1:-1,xx<w-1?j+1:-1,yy>0?j-w:-1,yy<h-1?j+w:-1])if(k>=0&&!lab[k]&&m[k]>.3){lab[k]=1;st.push(k)}}
+    if(n<12||sum/n<.5)continue;
+    /* 模型框得比字小一圈，往外放 */
+    const bw=x1-x0+1,bh=y1-y0+1,off=bw*bh*1.6/(2*(bw+bh)),X=Math.max(0,(x0-off)*fx),Y=Math.max(0,(y0-off)*fy);
+    out.push({x:X,y:Y,w:Math.min(im.width-X,(bw+2*off)*fx),h:Math.min(im.height-Y,(bh+2*off)*fy)})}
+  return out.sort((a,b)=>Math.round(a.y/20)-Math.round(b.y/20)||a.x-b.x);
+}
+async function ocrLine(E,im,b){
+  const H=48,W=Math.max(32,Math.min(960,Math.ceil(H*b.w/Math.max(1,b.h))));
+  const o=(await E.rec.run({[E.rec.inputNames[0]]:ocrPixels(im,W,H,b.x,b.y,b.w,b.h,[.5,.5,.5],[.5,.5,.5])}))[E.rec.outputNames[0]];
+  const[,T,C]=o.dims;let s="",last=0;
+  for(let t=0;t<T;t++){let mx=-1,mi=0;for(let c=0;c<C;c++){const v=o.data[t*C+c];if(v>mx){mx=v;mi=c}}if(mi&&mi!==last)s+=E.keys[mi];last=mi}
+  return s;
+}
+/* 一行一行讀，讀到有效日期就停；只有製造日再多讀三行找有效日或年限 */
+async function ocrRead(E,im,limit,alive){
+  const bs=await ocrBoxes(E,im,limit);let txt="",first=-1;
+  for(let i=0;i<bs.length;i++){
+    await new Promise(r=>setTimeout(r));if(!alive())return null;
+    txt+=await ocrLine(E,im,bs[i])+"\n";
+    const{t,ds}=datesAt(txt);if(!ds.length)continue;
+    if(first<0)first=i;
+    if(ds.some(x=>dateTag(t,x)==="exp")||i>=first+3)break;
+  }
+  const{t,ds}=datesAt(txt);
+  return{d:pickExp(t,ds),tall:bs.filter(b=>b.h>b.w*1.5).length>bs.length/2};
+}
+/* 讀不到才加碼：字框大多直立＝照片橫著拍，兩個方向都試；不然放大一點再讀。一次只跑一張，新的一張來了舊的就在下一行停掉 */
+function readLabelDate(blob,alive=()=>true){
+  const run=_ocrQ.then(async()=>{
+    if(!alive())return null;
+    const E=await ocrEngine(),im=await blobImg(blob);
+    try{
+      let r=await ocrRead(E,im,640,alive);if(!r||r.d)return r&&r.d;
+      if(r.tall){const c=toCanvas(im,1600);for(const rot of[90,270]){r=await ocrRead(E,rotCanvas(c,rot),640,alive);if(!r||r.d)return r&&r.d}return""}
+      r=await ocrRead(E,im,960,alive);return r&&r.d;
+    }finally{im.close&&im.close()}
+  });
+  _ocrQ=run.catch(()=>{});return run;
+}
+/* ========== 讀出貨單 ========== */
+/*SLIP>*/
+/* 模型常讀成簡體或形近字，先換回單子上的寫法 */
+const SLIP_T=Object.fromEntries("红紅宝寶纺紡内內黄黃细細饼餅贡貢汉漢单單货貨号號数數叶葉铺鋪户戶鸡雞枣棗芪耆连連莲蓮归歸头頭实實苍蒼风風凤鳳条條门門龙龍鱼魚乌烏麦麥广廣陈陳贝貝苏蘇怀懷决決钩鉤胶膠车車络絡蛎蠣灵靈鳖鱉节節党黨远遠蒌蔞虫蟲丝絲银銀钱錢华華药藥泽澤养養双雙盐鹽卤滷罗羅术朮参參".match(/../gu).map(p=>[...p]));
+const slipT=s=>shipKey([...s].map(c=>SLIP_T[c]||c).join(""));
+function lev(a,b){a=[...a];b=[...b];let p=[...Array(b.length+1).keys()];
+  for(let i=1;i<=a.length;i++){const c=[i];for(let j=1;j<=b.length;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c}return p[b.length]}
+/* 讀到的品名對到教過的名稱：一樣或只差一個字且沒有第二個一樣近的＝有把握；不然列最像的給人點 */
+function slipFix(t,names){
+  if(D.ocrFix&&D.ocrFix[t])return{name:D.ocrFix[t],sure:true,cands:[]};
+  if(D.alias[t]||names.has(t))return{name:t,sure:true,cands:[]};
+  const n=[...t].length,lim=Math.max(1,Math.floor(n/3)),hits=[];
+  for(const k of names){const kl=[...k].length;if(Math.abs(kl-n)>lim)continue;const d=lev(t,k);if(d<=lim)hits.push([k,d])}
+  hits.sort((a,b)=>a[1]-b[1]||!D.alias[a[0]]-!D.alias[b[0]]);
+  /* 只自動改成單子上出現過的名稱；品項清單的名字只當候選 */
+  const sure=hits.length&&hits[0][1]===1&&n>=3&&D.alias[hits[0][0]]&&!(hits[1]&&hits[1][1]===1);
+  return{name:sure?hits[0][0]:t,sure:!!sure,cands:hits.slice(0,3).map(h=>h[0])};
+}
+/* 行首的項次跟品名黏在一起（「750枸杞」＝第 7 行 50枸杞）：照順序猜該是第幾行，猜不到就挑拿掉後最像教過名稱的 */
+function slipStrip(t,exp,names){
+  const c=[[t,null]],m=t.match(/^(\d{1,2})/);
+  if(m)for(let i=1;i<=m[1].length;i++)c.push([t.slice(i),+m[1].slice(0,i)]);
+  else if(/^[sSIl|iO][一-鿿]/.test(t))c.push([t.slice(1),null]);
+  if(exp>1&&m&&t.startsWith(String(exp))&&t.length>String(exp).length)return[t.slice(String(exp).length),exp];
+  const sc=s=>{if(!s)return 99;let b=99;for(const k of names){if(Math.abs(k.length-s.length)>2)continue;b=Math.min(b,lev(s,k));if(!b)break}return b};
+  let best=c[0],bs=sc(c[0][0])+.5;for(const x of c.slice(1)){const v=sc(x[0]);if(v<bs){best=x;bs=v}}return best;
+}
+/* 字框排成一行一行；表頭「品名／數量」以下才是品項，到「合計」或虛線停 */
+function slipParse(bs,W){
+  const names=new Set([...Object.keys(D.alias),...D.items.map(i=>i.name)]);
+  const custs=[...new Set(D.ships.map(r=>r.cust).filter(Boolean))];
+  const rows=[];for(const b of bs.slice().sort((a,b)=>(a.y+a.h/2)-(b.y+b.h/2))){const cy=b.y+b.h/2,r=rows[rows.length-1];
+    if(r&&Math.abs(r.cy-cy)<b.h*.5)r.b.push(b);else rows.push({cy,b:[b]})}
+  rows.forEach(r=>r.b.sort((a,b)=>a.x-b.x));
+  let no="",cust="",qx=0,go=false,exp=0;const out=[];
+  for(const r of rows){const all=r.b.map(b=>b.s).join("");
+    if(!go){const n=all.match(/\d{8}/);if(n&&!no)no=n[0];
+      const ci=r.b.findIndex(b=>/客/.test(b.s));
+      if(ci>=0&&!cust){let s=r.b[ci].s.split(/[:：]/).slice(1).join("");if(!s){const nx=r.b.slice(ci+1).find(b=>!/^[(（]/.test(b.s));s=nx?nx.s:""}
+        s=slipT(s.replace(/[(（].*$/,""));const hit=custs.find(c=>c===s)||custs.find(c=>lev(c,s)<=1&&c.length>=2);cust=hit||s}
+      const q=r.b.find(b=>/量/.test(b.s));if(q)qx=q.x-W*.03;
+      if(/品/.test(all))go=true;continue}
+    if(/合[計计叶]|^合|-{4,}/.test(all))break;
+    const X=qx||W*.6,nb=r.b.filter(b=>b.x+b.w/2<X),qb=r.b.filter(b=>b.x+b.w/2>=X);
+    const name=slipT(nb.map(b=>b.s).join("")).replace(/\(下次[^)]*\)$/,""),qt=qb.map(b=>b.s).join("").replace(/\s/g,"");
+    const{q,u}=slipQty(qt);
+    if(/^[實寶宝实]出/.test(name)){const p=out[out.length-1];if(q&&p&&!p.q){p.q=q;p.u=u}continue}
+    if(!/[一-鿿]/.test(name))continue;
+    const[t,n]=slipStrip(name,out.length?exp+1:0,names);exp=n||exp+1;
+    if(!t)continue;
+    const y0=Math.min(...nb.map(b=>b.y)),y1=Math.max(...nb.map(b=>b.y+b.h));
+    out.push({ocr:t,...slipFix(t,names),q,u,box:{x:X,y:y0,w:Math.min(W-X,W*.3),h:y1-y0}});
+  }
+  return{no,cust,rows:out};
+}
+const slipQty=qt=>{qt=qt.replace(/\s/g,"");const m=qt.match(/\d+(\.\d+)?/);return{q:m?+m[0]:null,u:/[兩两]/.test(qt)?"兩":/[罐粒顆个個瓶盒支]/.test(qt)?"個":"斤"}};
+/*<SLIP*/
+/* 一張單：先找字框，再一框一框讀；讀的時候畫面還能動 */
+function readSlip(blob,alive=()=>true){
+  const run=_ocrQ.then(async()=>{
+    if(!alive())return null;
+    const E=await ocrEngine(),im=await blobImg(blob,1600);
+    try{
+      /* 先用高品質縮圖找字框（直接縮會讓數量欄的字黏成一長條）；太高的框是黏在一起的，丟掉 */
+      const c=toCanvas(im,960),f=im.width/c.width,bs=(await ocrBoxes(E,c,960)).map(b=>({x:b.x*f,y:b.y*f,w:b.w*f,h:b.h*f}));
+      const mh=bs.map(b=>b.h).sort((a,b)=>a-b)[bs.length>>1]||0,out=[];
+      for(const b of bs){if(b.h>mh*2.2||b.h<mh*.6&&b.w<mh*.6)continue;await new Promise(r=>setTimeout(r));if(!alive())return null;out.push({...b,s:await ocrLine(E,im,b)})}
+      const r=slipParse(out,im.width);
+      /* 數量沒讀到：直接讀那一行數量欄的位置 */
+      for(const x of r.rows){if(x.q)continue;await new Promise(r=>setTimeout(r));if(!alive())return null;
+        const y=slipQty(await ocrLine(E,im,x.box));if(y.q){x.q=y.q;x.u=y.u}}
+      return r;
+    }finally{im.close&&im.close()}
+  });
+  _ocrQ=run.catch(()=>{});return run;
+}
+/* 先在背後把讀字程式載好，拍完第一張就不用再等載入 */
+const ocrWarm=()=>{ocrEngine().catch(()=>{})};
+const slipNames=()=>new Set([...Object.keys(D.alias),...D.items.map(i=>i.name)]);
+/* 待確認出貨單：連拍的照片先存起來（D.slipQ），背後一張一張讀；人打開確認、存檔才扣帳。
+   st：wait 還沒讀／done 讀好／fail 讀不出來。同單號的第二頁讀好就併進第一頁那張 */
+let _slipRun=false,_slipOpen=null;
+const slipStat=q=>q.st==="wait"?"等著讀":q.st==="fail"?"讀不出來，請手動填":`${q.r.rows.length} 行`+((n=>n?`，黃色 ${n} 行`:"")(q.r.rows.filter(x=>!x.sure||!x.q).length));
+async function slipWork(){
+  if(_slipRun)return;_slipRun=true;
+  try{for(;;){
+    const q=D.slipQ.find(x=>x.st==="wait");if(!q)break;
+    /* 相機開著先不讀，拍照才不會卡 */
+    if(document.querySelector("#cam")){await new Promise(r=>setTimeout(r,1500));continue}
+    let r=null;try{const b=await pget(q.ph[0]);r=b?await readSlip(b):null}catch(e){}
+    if(!D.slipQ.includes(q))continue;
+    if(!r){q.st="fail";q.r={no:"",cust:"",rows:[]}}
+    else{q.st="done";q.r=r;
+      const p=r.no&&D.slipQ.find(x=>x!==q&&x.st==="done"&&x.r.no===r.no&&x.id!==_slipOpen);
+      if(p){p.ph.push(...q.ph);p.r.rows.push(...r.rows);if(!p.r.cust)p.r.cust=r.cust;D.slipQ.splice(D.slipQ.indexOf(q),1)}}
+    save();slipRefresh();
+  }}finally{_slipRun=false}
+}
+/* 首頁那一塊即時更新（不整頁重畫，免得打斷其他畫面） */
+function slipRefresh(){const el=$("slipq");if(el)el.outerHTML=slipQHtml()}
+function slipQHtml(){const Q=D.slipQ;if(!Q.length)return`<div id="slipq"></div>`;
+  return`<div id="slipq" style="margin-top:8px;background:#fff7e6;border-radius:8px;padding:8px"><div class="or">待確認出貨單 ${Q.length} 張（讀好 ${Q.filter(q=>q.st!=="wait").length} 張）</div>
+  ${Q.map(q=>`<div class="row" style="margin-top:6px" onclick="slipOpen('${q.id}')"><div class="grow">${esc(q.st==="done"?(q.r.no||"沒讀到單號")+"　"+(q.r.cust||""):"第 "+(Q.indexOf(q)+1)+" 張")}${q.ph.length>1?`<span class="mu">（${q.ph.length} 頁）</span>`:""}</div><span class="mu">${slipStat(q)} ›</span></div>`).join("")}</div>`}
+function slipOpen(id){const q=D.slipQ.find(x=>x.id===id);if(!q)return;
+  if(q.st==="wait"){toast("這張還沒讀完，等一下");return}
+  shipSheet("slip",q)}
+/* 連拍：每張照片馬上存進手機，關掉 App 也還在 */
+async function slipBurst(){
+  ocrWarm();let n=0,chain=Promise.resolve();
+  await camera("連拍出貨單：一張單拍一張",null,"slip",false,c=>{n++;
+    chain=chain.then(async()=>{const cc=toCanvas(c,1600);c.close();const b=await cBlob(cc,.82);const id=await pput(b);D.slipQ.push({id:uid(),t:Date.now(),ph:[id],st:"wait"});save();slipRefresh()}).catch(e=>alert("照片存不進去："+e.message));
+    return`連拍出貨單：已拍 ${n} 張，按「完成」結束`});
+  await chain;if(n)toast(`已存 ${n} 張，背後慢慢讀`);slipWork();
+}
+
+/* ========== 導覽 ========== */
+const TABS=[["count","盤點"],["spots","拍攝點"],["items","品項"],["more","更多"]];
+let tab="count",cnt=null;
+function go(t){tab=t;edCount=false;render()}
+function render(){
+  window.onresize=null;
+  $("nav").innerHTML=TABS.map(([k,n])=>`<button class="${k===tab?"on":""}" onclick="go('${k}')">${n}</button>`).join("");
+  const a=$("app");$("hd").textContent="藥材庫存（示範版）";
+  ({count:vCount,spots:vSpots,items:vItems,more:vMore})[tab](a);
+}
+
+/* ========== 盤點 ========== */
+const spotsSorted=()=>[...D.spots].sort((a,b)=>a.ord-b.ord);
+function expSoon(){const lim=addDays(today(),EXP_WARN_DAYS);return D.batches.filter(b=>b.qty>0&&b.exp&&b.exp<=lim).sort((a,b)=>a.exp<b.exp?-1:1)}
+function vCount(a){
+  const sp=spotsSorted(),s=D.sess,done=s?Object.keys(s.done).length:0;
+  const soon=expSoon();
+  a.innerHTML=`<div class="card" style="background:#eef5ee">這是<b>示範版</b>：資料都是虛構的。按「開始盤點」，在相機畫面按「示範照片」就能試（電腦沒有相機也可以）。</div>${D.fromV1?`<div class="card">已從舊版轉入 ${D.fromV1} 項品項（安全量沿用）。<button class="btn sm s" onclick="delete D.fromV1;save();render()">知道了</button></div>`:""}
+  ${soon.length?`<div class="card"><h3>即期品（${soon.length}）</h3>${soon.map(b=>{const k=D.skus.find(x=>x.id===b.sku);return`<div class="row"><div class="grow">${esc(k?skuName(k):"?")}</div><span class="${b.exp<today()?"dn":"or"}">${b.exp}　${b.qty} ${k?unitOf(k):""}</span></div>`}).join("")}</div>`:""}
+  <div class="card"><h3>每週盤點</h3><div class="mu">上次盤點：${D.lastCount||"尚未盤點"}　拍攝點 ${sp.length} 個</div>
+  ${s?`<div class="prog"><div style="width:${sp.length?done/sp.length*100:0}%"></div></div><div class="mu">進行中：${done}/${sp.length}（${s.start} 開始）</div>`:""}
+  <div class="row" style="margin-top:10px">${sp.length?(s?`<button class="btn grow" onclick="countNext()">繼續盤點</button><button class="btn s" onclick="if(confirm('放棄這次盤點？已確認的層數字會保留'))finishCount(true)">結束</button>`:`<button class="btn grow" onclick="startCount()">開始盤點</button>`):`<div class="mu">先到「拍攝點」建立第一個拍攝點。</div>`}</div></div>
+  ${elderCard()}
+  <div class="card"><div class="row"><h3 class="grow">出貨</h3><button class="btn s sm" onclick="shipSheet('retail')">零售／損耗</button><button class="btn" onclick="shipSheet('slip')">＋ 出貨單</button></div>
+  <button class="btn s" style="margin-top:8px;width:100%" onclick="slipBurst()">📷 連拍出貨單（先拍，之後再確認）</button>${slipQHtml()}
+  ${D.ships.slice(-5).reverse().map(r=>`<div class="row" style="margin-top:6px" onclick="shipView('${r.id}')"><div class="grow">${r.d}　${esc(r.kind==="slip"?r.cust||r.no||"出貨單":SHIPK[r.kind])}</div><span class="mu">${r.lines.some(shipShort)?'<span class="dn">帳不夠</span>　':""}${r.lines.length} 項 ›</span></div>`).join("")}</div>
+  <div class="card"><div class="row"><h3 class="grow">進貨</h3><button class="btn" onclick="recvSheet()">＋ 新增進貨單</button></div>
+  ${D.recv.slice(-5).reverse().map(r=>`<div class="row" style="margin-top:6px" onclick="recvView('${r.id}')"><div class="grow">${r.d}　${esc(r.sup||"未填供應商")}</div><span class="mu">${r.lines.length} 項 ›</span></div>`).join("")}</div>
+  <div class="card"><div class="row"><h3 class="grow">退換貨</h3><button class="btn s" onclick="moveSheet()">＋ 新增</button></div>
+  ${D.moves.slice(-5).reverse().map(x=>{const k=D.skus.find(y=>y.id===x.sku);return`<div class="row" style="margin-top:6px" onclick="moveView('${x.id}')"><div class="grow">${x.d}　${MOVE[x.type]}　${esc(k?skuName(k):"?")}</div><span class="mu">${x.type==="swap"?"":x.type==="cust"?"+"+x.n:"−"+x.n} ›</span></div>`}).join("")}</div>
+  ${buyCard()}`;
+}
+/* 已開始追蹤＝有框在拍攝點上，或有數量（還沒建位置、數量 0 的初始品項不列入補貨） */
+const tracked=k=>itemOf(k).loc!=="樓下"&&(k.qty>0||D.spots.some(s=>s.regions.some(r=>r.sku===k.id)));
+/* 品牌能不能互相代替看品項（2 樓大多可以）：
+   預設可以 → 各品牌加起來跟品項安全量比；
+   勾「各品牌分開補貨」(it.sep) → 每個品牌自己比，品牌沒另外設安全量就用品項的 */
+const safeOf=k=>{const it=itemOf(k);return it.sep?(k.safe??it.safe):it.safe};
+const lowItem=it=>it.safe>0&&D.skus.some(k=>k.item===it.id&&tracked(k))&&totalOf(it)<=it.safe;
+const lowSku=k=>{const it=itemOf(k);return it.sep?safeOf(k)>0&&tracked(k)&&k.qty<=safeOf(k):lowItem(it)};
+function buyCard(){const r=[];
+  for(const it of D.items){const ks=D.skus.filter(k=>k.item===it.id),sup0=ks.map(supOf).find(Boolean);
+    if(it.sep){for(const k of ks)if(lowSku(k))r.push({n:skuName(k),q:k.qty,s:safeOf(k),sup:supOf(k)||sup0})}
+    else if(lowItem(it))r.push({n:it.name+(ks.filter(k=>k.vendor).length>1?"（各品牌合計）":""),q:totalOf(it),s:it.safe,sup:sup0})}
+  if(!r.length)return"";r.sort((a,b)=>a.n.localeCompare(b.n,"zh-Hant"));
+  const g={};for(const x of r){const sup=x.sup||"（還沒有供應商）";(g[sup]=g[sup]||[]).push(x)}
+  return`<div class="card"><h3>要補貨（${r.length}）</h3>${Object.keys(g).sort().map(sup=>`<div class="mu" style="margin-top:8px"><b>${esc(sup)}</b></div>${g[sup].map(x=>`<div class="row"><div class="grow">${esc(x.n)}</div><span>${x.q} ／ 安全量 ${x.s}</span></div>`).join("")}`).join("")}</div>`}
+const totalOf=it=>D.skus.filter(k=>k.item===it.id).reduce((s,k)=>s+k.qty,0);
+function startCount(){D.sess={start:today(),done:{}};save();countNext()}
+function countNext(){const n=spotsSorted().find(s=>!D.sess.done[s.id]);if(!n){finishCount(false);return}countSpot(n)}
+async function countSpot(sp){_demoSpot=sp;
+  const all=spotsSorted(),i=all.indexOf(sp)+1;
+  const blob=await camera(`${sp.name}（${i}/${all.length}）`,await purl(sp.photo),"shelf",!!sp.land,null,true);
+  if(!blob){render();return}
+  const m=sheet(`<h3>${esc(sp.name)}</h3><div class="mu">估算中…</div>`),te=performance.now();
+  await new Promise(r=>setTimeout(r,30));
+  try{
+    /* 相機拍的已經是 1600，不用再縮（少解碼一次）；系統相機、相簿的大圖才縮 */
+    let nb=blob,imN;
+    if(blob instanceof HTMLCanvasElement){imN=blob;nb=blob.blobP}
+    else{imN=await blobImg(blob);if(Math.max(imN.width,imN.height)>1600){imN.close&&imN.close();nb=await shrinkBlob(blob);imN=await blobImg(nb)}}const base=await pget(sp.photo);const imB=base?await blobImg(base):null;
+    const T=imB?align(imB,imN):{s:1,tx:0,ty:0,good:false};
+    const G=gray(imN,MEASURE_W);
+    const est={};
+    for(const r of sp.regions){const k=D.skus.find(x=>x.id===r.sku);if(!k)continue;const nr=mapRect(r,T);const q=ratioOf(G,r,nr),h=q==null?0:q*r.h0;
+      let f=null;if(k.mode!=="manual"&&q!=null)f=Math.max(0,Math.round(r.front*q));
+      /* 框太細、量到幾乎 0、照片對不準：估出來不可信，先留帳上數字 */
+      const why=f===null?"":q<.05||r.w<.05?"量不到":T.good?"":"對不準";
+      (est[k.id]=est[k.id]||{regs:[],est:0,ok:true}).regs.push({r,nr,h,f});if(f===null)est[k.id].ok=false;else est[k.id].est+=f+(r.back||0);if(why&&est[k.id].why!=="量不到")est[k.id].why=why}
+    perf("盤點估算",performance.now()-te);m.remove();confirmSpot(sp,nb,T,est,imN);
+  }catch(e){m.remove();alert("估算失敗："+e.message);render()}
+}
+function confirmSpot(sp,photo,T,est,imC){
+  /* 照片可能還在背後壓 JPEG：畫面先直接顯示拍到的 canvas */
+  let url="";const pe=imC instanceof HTMLCanvasElement?imC:document.createElement("img");pe.className="ph";pe.style.width="100%";
+  if(!(imC instanceof HTMLCanvasElement))Promise.resolve(photo).then(b=>{url=URL.createObjectURL(b);pe.src=url});
+  const rows=Object.keys(est).map(id=>{const k=D.skus.find(x=>x.id===id),e=est[id];const led=k.qty,it=itemOf(k);
+    const plenty=led>PLENTY&&(!e.ok||e.est>PLENTY);
+    const why=e.ok&&!plenty?e.why||"":"";
+    const val=plenty||why?led:(e.ok?e.est:led);
+    return{k,e,led,plenty,val,manual:!e.ok,it,why}});
+  const m=sheet("");
+  const draw=()=>{m.querySelector(".sheet").innerHTML=`<div class="row"><h3 class="grow">${esc(sp.name)}</h3><button class="btn" id="cok">✓ 這層正確</button></div>
+    ${T.good?"":`<div class="mu or">⚠ 跟上次的照片對不太準，數字請多看一眼</div>`}
+    <div id="cph"></div>
+    <table class="ct"><tr class="mu"><td>品項</td><td class="n">照片</td><td class="n">帳上</td><td class="n">差</td></tr>
+    ${rows.map((x,i)=>{const d=x.val-x.led,red=d>0&&!x.plenty;const low=safeOf(x.k)>0&&x.val<=safeOf(x.k);
+      return`<tr data-i="${i}" class="${red?"red":""}"><td>${esc(skuName(x.k))}${x.plenty?'<span class="tag t-ok">充足</span>':""}${x.manual?'<span class="tag">手動</span>':""}${low?'<span class="tag t-red">要補貨</span>':""}${x.e.regs.some(g=>(g.r.rows||1)>1)?`<div class="mu">前後 ${x.e.regs[0].r.rows} 排</div>`:""}${x.why&&!x.set?`<div class="mu or">${x.why==="量不到"?"量不到":"照片對不準，估 "+x.e.est}，先留帳上，請看一眼</div>`:""}</td>
+      <td class="n"><b>${x.plenty?"約 "+(x.e.ok?x.e.est:x.led):(x.manual&&!x.set?"—":x.val)}</b></td><td class="n">${x.led}</td>
+      <td class="n ${d>0?"dn":d<0?"":"ok"}">${x.plenty?"":(x.manual&&!x.set?"點我":(d>0?"+"+d+" ⚠":d))}</td></tr>`}).join("")}</table>
+    ${rows.length?"":`<div class="mu">這個拍攝點還沒有框任何品項。</div>`}
+    <div class="mu" style="margin:8px 0">數字不對就點那一行修改。</div>
+    <button class="btn s" id="cmore" style="width:100%;margin-bottom:8px">＋這層多了品項</button>
+    <div class="row"><button class="btn s grow" id="crt">重拍</button><button class="btn s grow" id="cx">稍後再拍</button></div>`;
+    $("cph").appendChild(pe);
+    m.querySelectorAll("tr[data-i]").forEach(tr=>tr.onclick=()=>editRow(rows[+tr.dataset.i],draw));
+    $("crt").onclick=()=>{m.remove();if(url)URL.revokeObjectURL(url);countSpot(sp)};
+    $("cx").onclick=()=>{m.remove();if(url)URL.revokeObjectURL(url);render()};
+    const ok=async after=>{
+      const unset=rows.filter(x=>x.manual&&!x.set&&!x.plenty);
+      if(unset.length&&!confirm(`還有 ${unset.length} 項手動點的品項沒填，照帳上數字算？`))return;
+      m.querySelectorAll("button").forEach(b=>b.disabled=true);$("cok").textContent="存檔中…";await applySpot(sp,photo,T,rows,imC instanceof HTMLCanvasElement?imC:null);m.remove();if(url)URL.revokeObjectURL(url);after()};
+    $("cok").onclick=()=>ok(countNext);
+    /* 先存這層，剛拍的照片變成基準照，新品項直接框在上面；按「完成」接著盤下一層 */
+    $("cmore").onclick=()=>ok(async()=>{await spotWait();edCount=true;openSpot(sp.id)});
+  };
+  draw();
+}
+function editRow(x,redraw){
+  const multi=x.e.regs.length===1&&(x.e.regs[0].r.rows||1)>1;const r0=x.e.regs[0].r;
+  const m=sheet(`<h3>${esc(skuName(x.k))}</h3><div class="mu">照片估 ${x.e.ok?x.e.est:"—"}　帳上 ${x.led}</div>
+    <label class="mu">這次實際是（${esc(unitOf(x.k))}）</label><input type="number" inputmode="numeric" id="eq" value="${x.val}">
+    ${multi?`<label class="mu">其中後排</label><input type="number" inputmode="numeric" id="eb" value="${x.back??r0.back??0}">
+    <div class="row wrap" style="margin-top:8px"><button class="btn s sm" id="e0">後排已經空了</button></div>`:""}
+    <div class="row" style="margin-top:12px;align-items:center"><span class="mu grow" id="emt"></span><button class="btn s sm" id="emd"></button></div>
+    <div class="row" style="margin-top:12px"><button class="btn s grow" id="ec">取消</button><button class="btn grow" id="eo">確定</button></div>`);
+  const q=$("eq");q.focus();q.select();
+  /* 盤點方式：改了從下一次盤點開始算，這一次照上面的數字 */
+  const md=()=>{const man=x.k.mode==="manual";$("emt").textContent="盤點方式："+(man?"手動點":"照片估");$("emd").textContent=man?"改成照片估":"改成手動點"};md();
+  $("emd").onclick=()=>{const man=x.k.mode==="manual";x.k.mode=man?"photo":"manual";save();md();
+    toast(man?(x.e.regs.some(g=>(g.r.h0||0)<.03)?"已改成照片估（這個框看不出堆高，可能估不出來）":"已改成照片估，下次盤點開始用"):"已改成手動點，下次盤點開始用",3000)};
+  if(multi)$("e0").onclick=()=>{$("eb").value=0};
+  $("ec").onclick=()=>m.remove();
+  $("eo").onclick=()=>{const v=Math.max(0,parseInt(q.value,10)||0);x.val=v;x.set=true;x.plenty=false;if(multi)x.back=Math.min(v,Math.max(0,parseInt($("eb").value,10)||0));m.remove();redraw()};
+}
+/* 數字先存、馬上可以拍下一層；照片 JPEG 還在背後壓，壓好才換基準照（中途關掉 App，舊基準照和舊框還是一組） */
+let _spotSave=Promise.resolve(),_spotBusy=0;
+const spotWait=async()=>{if(_spotBusy)toast("照片還在存，等一下…",4000);await _spotSave};
+async function applySpot(sp,photo,T,rows,imC){
+  if(!imC)photo=await photo;
+  for(const x of rows){
+    const v=x.manual&&!x.set&&!x.plenty?x.led:x.val;
+    const regs=x.e.regs;
+    if(x.back!=null&&regs.length===1)regs[0].r.back=x.back;
+    const backs=regs.reduce((s,g)=>s+(g.r.back||0),0);let front=Math.max(0,v-backs);
+    const fsum=regs.reduce((s,g)=>s+(g.f??g.r.front??0),0)||regs.length;
+    regs.forEach((g,i)=>{const share=i===regs.length-1?front:Math.round(front*((g.f??g.r.front??1)/fsum));front-=share;g.r.front=share});
+    x.k.qty=v;snap(x.k);
+  }
+  sp.conf=today();D.sess.done[sp.id]=true;save();
+  const G=gray(imC||await blobImg(photo),MEASURE_W);
+  _spotBusy++;const job=_spotSave.then(async()=>{const pid=await pput(await photo);
+    for(const r of sp.regions){if(T.good)Object.assign(r,mapRect(r,T));setBase(G,r)}
+    D.shots.push({d:today(),spot:sp.id,photo:pid});sp.photo=pid;save()}).catch(e=>alert("照片存不進去："+e.message)).finally(()=>_spotBusy--);
+  _spotSave=job;if(!imC)await job;
+}
+async function finishCount(aborted){
+  await spotWait();const s=D.sess;D.sess=null;
+  if(!aborted||Object.keys(s.done).length){D.lastCount=today();const q={};for(const k of D.skus)q[k.id]=k.qty;D.counts.push({d:today(),q});D.counts=D.counts.slice(-60)}
+  save();await cleanup();
+  render();
+  if(!aborted){const m=sheet(`<h3>盤點完成</h3>${buyCard()||'<div class="mu">沒有低於安全量的品項。</div>'}
+    <div class="mu" style="margin:8px 0">正在自動備份到手機的「下載」資料夾…</div><button class="btn" style="width:100%" id="fo">好</button>`);$("fo").onclick=()=>m.remove();
+    try{await backup(true)}catch(e){toast("自動備份失敗："+e.message)}
+    elderSend(true)}
+}
+/* 只留最近兩週的盤點照片；拍攝點基準照與批次標籤照不刪 */
+async function cleanup(){
+  const lim=addDays(today(),-KEEP_DAYS);
+  /* 出貨單紙本還在，照片留兩週就好 */
+  for(const r of D.ships)if(r.d<lim)r.photos=[];
+  const keep=new Set([...D.recv.flatMap(recvPhotos),...D.ships.flatMap(r=>r.photos||[]),...D.slipQ.flatMap(q=>q.ph),...D.spots.map(s=>s.photo),...D.batches.filter(b=>b.qty>0).map(b=>b.photo)].filter(Boolean));
+  const old=D.shots.filter(x=>x.d<lim);D.shots=D.shots.filter(x=>x.d>=lim);
+  for(const x of old)if(!keep.has(x.photo))await pdel(x.photo);
+  for(const b of D.batches)if(b.qty<=0&&b.photo){await pdel(b.photo);b.photo=""}
+  /* 換掉的基準照、刪掉的拍攝點留下的照片 */
+  const used=new Set([...keep,...D.shots.map(x=>x.photo)]);
+  for(const id of await pstore("readonly",s=>s.getAllKeys()))if(!used.has(id))await pdel(id);
+  save();
+}
+
+/* ========== 拍攝點（建檔） ========== */
+function vSpots(a){
+  const sp=spotsSorted();
+  a.innerHTML=`<div class="card"><h3>新增拍攝點</h3><div class="mu">一格的一層拍一張，命名「貨架-格-層」，例如 1-2-3。照走位順序建。</div>
+    <div class="row" style="margin-top:8px"><input type="text" id="sn" value="${esc(nextName())}"><button class="btn" onclick="addSpot()">拍照建立</button></div></div>
+    ${sp.map((s,i)=>`<div class="card row"><div class="grow" onclick="openSpot('${s.id}')"><b>${esc(s.name)}</b><div class="mu">${s.regions.length} 個框${s.conf?"　上次確認 "+s.conf:""}</div></div>
+    <button class="btn s sm" onclick="moveSpot('${s.id}',-1)" ${i?"":"disabled"}>↑</button><button class="btn s sm" onclick="moveSpot('${s.id}',1)" ${i<sp.length-1?"":"disabled"}>↓</button></div>`).join("")||'<div class="mu">還沒有拍攝點。</div>'}`;
+}
+function nextName(){const l=spotsSorted().at(-1);if(!l)return"1-1-1";const p=l.name.split("-");if(p.length===3&&/^\d+$/.test(p[2]))return p[0]+"-"+p[1]+"-"+(+p[2]+1);return l.name+"-2"}
+function moveSpot(id,d){const sp=spotsSorted(),i=sp.findIndex(s=>s.id===id),j=i+d;if(j<0||j>=sp.length)return;[sp[i].ord,sp[j].ord]=[sp[j].ord,sp[i].ord];save();render()}
+async function addSpot(){
+  const n=$("sn").value.trim();if(!n){alert("請輸入名稱");return}
+  if(D.spots.some(s=>s.name===n)){alert("已經有這個名稱");return}
+  const b=await camera(n+"：拍基準照");if(!b){render();return}
+  const sb=await shrinkBlob(b),pid=await pput(sb),land=await isLand(sb);
+  const s={id:uid(),name:n,ord:(D.spots.reduce((m,x)=>Math.max(m,x.ord),0)||0)+1,photo:pid,regions:[],conf:"",land};
+  D.spots.push(s);save();openSpot(s.id);
+}
+async function isLand(b){const im=await blobImg(b),r=im.width>im.height;im.close&&im.close();return r}
+/* 拍攝點上每個框列出它的批次，點了直接改日期，不用重拍；還沒有批次才是拍標籤 */
+function labelBtns(k,spotId){if(!itemOf(k).exp)return"";const bs=batchesOf(k).filter(b=>b.qty>0);
+  return`<div class="row wrap" style="margin-top:6px">${bs.map(b=>`<button class="btn s sm" onclick="event.stopPropagation();editLabel('${k.id}','${b.id}','${spotId}')">${b.exp?"有效 "+b.exp:"未填日期"}${b.photo?"📷":""}（${b.qty}）</button>`).join("")||`<button class="btn s sm" onclick="event.stopPropagation();editLabel('${k.id}','','${spotId}')">拍標籤</button>`}</div>`}
+function editLabel(skuId,batchId,spotId){const k=D.skus.find(x=>x.id===skuId);const b=batchId?D.batches.find(x=>x.id===batchId):null;labelSheet(k,()=>openSpot(spotId),b,!!b)}
+async function openSpot(id){
+  const s=D.spots.find(x=>x.id===id);const url=await purl(s.photo);if(edSpot!==id){edSpot=id;edZ=s.land?2:1;edMove=false;edScroll={l:0,t:0}}
+  $("hd").textContent="拍攝點 "+s.name;
+  const a=$("app");
+  a.innerHTML=`${edCount?'<div class="mu or">盤點中：框好新品項後按「完成」，接著盤下一層。</div>':""}<div class="mu" style="margin-bottom:6px">在照片上用手指拉一個框（從堆的上方空白處拉到貨架板），框住一個品項。點已有的框可以修改；按住框的邊（白色把手）拖，可以直接調整高度或寬度。放大後要看別的地方，按「✋ 移動」再用手指拖，拖好再按一次回到畫框。</div>
+  <div class="edz">${[1,2,3].map(z=>`<button class="btn s sm ${edZ===z?"on":""}" data-z="${z}">${z}×</button>`).join("")}<span class="grow"></span><button class="btn s sm ${edMove?"on":""}" id="edm">✋ 移動</button></div>
+  <div id="edw"><div class="ed" id="ed" style="width:${edZ*100}%"><img src="${url}" id="edi"><canvas id="edc"></canvas></div></div>
+  <div style="margin-top:10px">${s.regions.map(r=>{const k=D.skus.find(x=>x.id===r.sku);return`<div class="card row" onclick="regionSheet('${s.id}','${r.id}')"><div class="grow">${esc(k?skuName(k):"?")}<div class="mu">${(r.cols||1)>1?r.cols+" 疊　":""}前排 ${r.front}${(r.rows||1)>1?"＋後排 "+r.back+"（"+r.rows+" 排）":""}${k&&k.mode==="manual"?"　手動點":""}</div>${k&&k.mode!=="manual"&&(r.h0??0)>=.97?'<div style="color:var(--rd);font-size:13px">⚠ 量起來是滿格：把上緣往上拉到空白處；框裡不要包到鐵柱或後面別疊的袋子</div>':""}${k?labelBtns(k,s.id):""}</div><span class="mu">修改</span></div>`}).join("")}</div>
+  <div class="row wrap" style="margin-top:10px"><button class="btn s" onclick="spotDone()">完成</button><button class="btn s" onclick="reshootSpot('${s.id}')">重拍基準照</button><button class="btn s" onclick="renameSpot('${s.id}')">改名</button><button class="btn d" onclick="delSpot('${s.id}')">刪除</button></div>`;
+  const img=$("edi"),w=$("edw");
+  const ready=()=>{editor(s);w.scrollLeft=edScroll.l;w.scrollTop=edScroll.t};img.onload=ready;if(img.complete)ready();
+  w.onscroll=()=>{edScroll={l:w.scrollLeft,t:w.scrollTop}};
+  a.querySelectorAll("[data-z]").forEach(b=>b.onclick=()=>{const z=+b.dataset.z,cx=(w.scrollLeft+w.clientWidth/2)/w.scrollWidth,cy=(w.scrollTop+w.clientHeight/2)/w.scrollHeight;
+    edZ=z;$("ed").style.width=z*100+"%";a.querySelectorAll("[data-z]").forEach(x=>x.classList.toggle("on",+x.dataset.z===z));editor(s);
+    w.scrollLeft=cx*w.scrollWidth-w.clientWidth/2;w.scrollTop=cy*w.scrollHeight-w.clientHeight/2;edMove=z>1&&edMove;setMove()});
+  const setMove=()=>{$("edm").classList.toggle("on",edMove);$("ed").style.touchAction=edMove?"auto":"none"};
+  $("edm").onclick=()=>{edMove=!edMove;setMove()};setMove();
+  window.onresize=()=>{if($("edc"))editor(s)};
+}
+/* 畫框的放大倍數、移動模式（移動時手指拖照片、不畫框）、捲動位置；回到同一個拍攝點時保留 */
+let edZ=1,edMove=false,edScroll={l:0,t:0},edSpot=null,edCount=false;
+function spotDone(){const c=edCount&&D.sess;edCount=false;if(c)countNext();else render()}
+function editor(s){
+  const cv=$("edc"),img=$("edi");if(!cv)return;cv.width=img.clientWidth;cv.height=img.clientHeight;const x=cv.getContext("2d");
+  const draw=tmp=>{x.clearRect(0,0,cv.width,cv.height);x.lineWidth=2;x.font="14px sans-serif";
+    for(const r of s.regions){const k=D.skus.find(z=>z.id===r.sku),X=r.x*cv.width,Y=r.y*cv.height,W=r.w*cv.width,H=r.h*cv.height;
+      x.strokeStyle=r===drag?.r?"#00e5ff":"#ffeb3b";x.strokeRect(X,Y,W,H);
+      if((r.cols||1)>1){x.save();x.setLineDash([5,4]);for(let i=1;i<r.cols;i++){const xx=X+W*i/r.cols;x.beginPath();x.moveTo(xx,Y);x.lineTo(xx,Y+H);x.stroke()}x.restore()}
+      /* 上下邊中間的把手：拖它改高度 */
+      x.fillStyle="#fff";for(const yy of[Y,Y+H]){x.fillRect(X+W/2-9,yy-4,18,8);x.strokeRect(X+W/2-9,yy-4,18,8)}
+      const t=k?skuName(k):"?";x.fillStyle="rgba(0,0,0,.6)";x.fillRect(X,Y+5,x.measureText(t).width+8,18);x.fillStyle="#fff";x.fillText(t,X+4,Y+19)}
+    if(tmp){x.strokeStyle="#00e5ff";x.strokeRect(tmp.x*cv.width,tmp.y*cv.height,tmp.w*cv.width,tmp.h*cv.height)}};
+  let st=null,cur=null,drag=null;
+  draw();
+  const pos=e=>{const b=cv.getBoundingClientRect();return{x:Math.min(1,Math.max(0,(e.clientX-b.left)/b.width)),y:Math.min(1,Math.max(0,(e.clientY-b.top)/b.height))}};
+  /* 手指按在框的某一邊附近（約 16px）＝拖那一邊 */
+  const edgeAt=p=>{const tx=16/cv.width,ty=16/cv.height;let best=null;
+    for(const r of s.regions){const inX=p.x>=r.x-tx&&p.x<=r.x+r.w+tx,inY=p.y>=r.y-ty&&p.y<=r.y+r.h+ty;
+      const c=[["t",inX&&Math.abs(p.y-r.y)/ty],["b",inX&&Math.abs(p.y-r.y-r.h)/ty],["l",inY&&Math.abs(p.x-r.x)/tx],["r",inY&&Math.abs(p.x-r.x-r.w)/tx]];
+      for(const[e,d]of c)if(d!==false&&d<=1&&(!best||d<best.d))best={r,e,d}}
+    return best};
+  cv.onpointerdown=e=>{if(edMove)return;cv.setPointerCapture(e.pointerId);st=pos(e);cur=null;
+    const h=edgeAt(st);drag=h?{r:h.r,e:h.e,o:{x:h.r.x,y:h.r.y,w:h.r.w,h:h.r.h},moved:false}:null;if(drag)draw()};
+  cv.onpointermove=e=>{if(!st)return;const p=pos(e);
+    if(drag){const r=drag.r,o=drag.o,m=.03;drag.moved=drag.moved||Math.abs(p.y-st.y)>.005||Math.abs(p.x-st.x)>.005;
+      if(drag.e==="t"){const y=Math.min(p.y,o.y+o.h-m);r.y=y;r.h=o.y+o.h-y}
+      else if(drag.e==="b")r.h=Math.max(m,p.y-o.y);
+      else if(drag.e==="l"){const xx=Math.min(p.x,o.x+o.w-m);r.x=xx;r.w=o.x+o.w-xx}
+      else r.w=Math.max(m,p.x-o.x);
+      draw();return}
+    cur={x:Math.min(st.x,p.x),y:Math.min(st.y,p.y),w:Math.abs(p.x-st.x),h:Math.abs(p.y-st.y)};draw(cur)};
+  cv.onpointerup=async e=>{if(edMove||!st)return;const p=st;st=null;
+    if(drag){const d=drag;drag=null;draw();
+      if(d.moved){/* 改了框 → 重新量基準照上的高度 */
+        const im=await blobImg(await pget(s.photo));setBase(gray(im,MEASURE_W),d.r);im.close&&im.close();save();toast("框已調整");return}
+      regionSheet(s.id,d.r.id);return}
+    if(cur&&cur.w>.03&&cur.h>.03){const r=cur;cur=null;draw(r);regionSheet(s.id,null,r)}
+    else{const hit=s.regions.find(r=>p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h);draw();if(hit)regionSheet(s.id,hit.id)}};
+}
+async function reshootSpot(id){
+  const s=D.spots.find(x=>x.id===id);const b=await camera(s.name+"：重拍基準照",await purl(s.photo),"shelf",!!s.land);if(!b){openSpot(id);return}
+  const nb=await shrinkBlob(b);const old=await pget(s.photo);
+  if(old&&s.regions.length){const T=align(await blobImg(old),await blobImg(nb));if(!T.good)toast("對不太準，請檢查框的位置");if(T.good)for(const r of s.regions)Object.assign(r,mapRect(r,T))}
+  const G=gray(await blobImg(nb),MEASURE_W);for(const r of s.regions)setBase(G,r);
+  s.photo=await pput(nb);s.land=await isLand(nb);save();openSpot(id);
+}
+function renameSpot(id){const s=D.spots.find(x=>x.id===id);const n=prompt("拍攝點名稱",s.name);if(n&&n.trim()){s.name=n.trim();save();openSpot(id)}}
+function delSpot(id){if(!confirm("刪除這個拍攝點？（品項數量不會刪）"))return;D.spots=D.spots.filter(s=>s.id!==id);save();render()}
+
+/* 框的設定：品項（可新增）、品牌、數量、前後排、盤點方式 */
+function itemSearchHtml(id){return`<input type="search" id="${id}" placeholder="打一兩個字找品項" autocomplete="off"><div id="${id}s"></div>`}
+function bindItemSearch(id,onPick,empty){
+  const inp=$(id),box=$(id+"s");
+  const show=()=>{const q=inp.value.trim();if(!q){box.innerHTML=empty?empty():"";
+      box.querySelectorAll("[data-id]").forEach(d=>d.onclick=()=>{const it=D.items.find(i=>i.id===d.dataset.id);inp.value=it.name;box.innerHTML="";onPick(it)});return}
+    const hits=D.items.filter(i=>i.name.includes(q)).slice(0,8);
+    box.innerHTML=`<div class="sug">${hits.map(i=>`<div data-id="${i.id}">${esc(i.name)}</div>`).join("")}${hits.some(i=>i.name===q)?"":`<div data-new="1">＋新增品項「${esc(q)}」</div>`}</div>`;
+    box.querySelectorAll("[data-id]").forEach(d=>d.onclick=()=>{const it=D.items.find(i=>i.id===d.dataset.id);inp.value=it.name;box.innerHTML="";onPick(it)});
+    const nw=box.querySelector("[data-new]");if(nw)nw.onclick=()=>{box.innerHTML="";onPick({id:"",name:q,unit:"包",safe:SAFE,exp:true,isNew:true})}};
+  inp.oninput=show;if(empty)show();
+}
+/* 品項裡「沒填品牌、也還沒框到」的那組 */
+const blankOf=it=>it&&!it.isNew?D.skus.find(x=>x.item===it.id&&!x.vendor&&!D.spots.some(s=>s.regions.some(r=>r.sku===x.id))):null;
+/* 新框：還沒框到、帳上有數量的品項（例如紙本盤點輸入過的）直接列出來點選 */
+function unframedList(){
+  const used=new Set(D.spots.flatMap(s=>s.regions.map(r=>r.sku)));
+  /* 最近兩週進貨的排最前面 */
+  const lim=addDays(today(),-14);
+  const its=D.items.map(it=>{const ks=D.skus.filter(k=>k.item===it.id&&!used.has(k.id));
+      return{it,q:ks.reduce((t,k)=>t+k.qty,0),d:D.batches.filter(b=>b.qty>0&&b.d>=lim&&ks.some(k=>k.id===b.sku)).map(b=>b.d).sort().pop()||""}}).filter(x=>x.q>0)
+    .sort((a,b)=>(a.d<b.d)-(a.d>b.d)||a.it.name.localeCompare(b.it.name,"zh-Hant"));
+  if(!its.length)return"";
+  return`<div class="mu" style="margin-top:8px">還沒框到、帳上有數量的（${its.length}），點一下就選好：</div>
+    <div class="sug" style="max-height:38vh;overflow:auto">${its.map(x=>`<div data-id="${x.it.id}">${esc(x.it.name)}<span class="mu">　${x.q} ${esc(x.it.unit||"包")}${x.d?"　最近進貨":""}</span></div>`).join("")}</div>`}
+function regionSheet(spotId,regId,newRect){
+  const s=D.spots.find(x=>x.id===spotId);const r=regId?s.regions.find(x=>x.id===regId):null;
+  const k0=r?D.skus.find(x=>x.id===r.sku):null;let item=k0?itemOf(k0):null;
+  const m=sheet(`<h3>${r?"修改框":"這個框是什麼？"}</h3>${itemSearchHtml("rs")}
+    <div id="rf"></div>
+    <div class="row" style="margin-top:12px">${r?'<button class="btn d" id="rd">刪除框</button>':""}<button class="btn s grow" id="rc">取消</button><button class="btn grow" id="ro">儲存</button></div>`);
+  const fill=()=>{
+    if(!item){$("rf").innerHTML="";return}
+    const ks=item.isNew?[]:D.skus.filter(k=>k.item===item.id);
+    /* 新框預設選還沒框、帳上有數量的品牌（新進的貨），不要落在第一個舊品牌 */
+    const unf=r?null:ks.find(k=>k.qty>0&&!D.spots.some(x=>x.regions.some(g=>g.sku===k.id)));
+    $("rf").innerHTML=`${item.isNew?`<label class="mu">單位</label><select id="ru">${UNITS.map(u=>`<option>${u}</option>`).join("")}</select>`:""}
+      <label class="mu">品牌（沒有就留空）</label><select id="rv">${ks.map(k=>`<option value="${k.id}" ${(k0&&k0.id===k.id)||unf===k?"selected":""}>${esc(k.vendor||"（不分品牌）")}</option>`).join("")}<option value="">＋另一個品牌</option></select>
+      <input type="text" id="rvn" data-sug="brand" placeholder="品牌名稱，例如 A牌" style="margin-top:6px;${ks.length?"display:none":""}">
+      <label class="mu">左右並排幾疊（同一個品項排成好幾疊就選幾疊，框一個大框就好）</label><select id="rcol">${[1,2,3,4,5,6].map(n=>`<option ${(r?.cols||1)===n?"selected":""}>${n}</option>`).join("")}</select>
+      <label class="mu">前後幾排</label><select id="rr">${[1,2,3].map(n=>`<option ${(r?.rows||1)===n?"selected":""}>${n}</option>`).join("")}</select>
+      <label class="mu">前排（看得到的那疊）有幾${esc(item.unit||"包")}</label><input type="number" inputmode="numeric" id="rq" value="${r?r.front:""}"><div class="mu" id="rqh"></div>
+      <div id="rbw"><label class="mu">後排共有幾${esc(item.unit||"包")}</label><input type="number" inputmode="numeric" id="rb" value="${r?r.back||0:0}"></div>
+      <label class="mu">盤點方式</label><select id="rm"><option value="photo">照片估</option><option value="manual" ${k0&&k0.mode==="manual"?"selected":""}>手動點（紙箱、平放、形狀亂的）</option></select>`;
+    const sv=()=>{$("rvn").style.display=$("rv").value?"none":""};$("rv").onchange=sv;sv();
+    const sb=()=>{$("rbw").style.display=$("rr").value==="1"?"none":""};$("rr").onchange=sb;sb();
+    /* 新框：帳上已經有數量（例如紙本盤點輸入過）就先帶進來，扣掉這個品牌其他框已經算的；有後排就從前排扣 */
+    let auto=null;
+    const pre=()=>{if(r)return;const k=D.skus.find(x=>x.id===$("rv").value)||($("rv").value===""?blankOf(item):null);
+      const left=k?k.qty-D.spots.flatMap(x=>x.regions).filter(x=>x.sku===k.id).reduce((t,x)=>t+x.front+(x.back||0),0):0;
+      if(left>0&&($("rq").value===""||auto!=null)){auto=left;$("rq").value=Math.max(0,left-($("rr").value==="1"?0:parseInt($("rb").value,10)||0));
+        $("rqh").textContent=`帳上還有 ${left} ${item.unit||"包"}沒框到，先帶進來；跟架上不一樣就改`}
+      else if(auto!=null&&left<=0){auto=null;$("rq").value="";$("rqh").textContent=""}};
+    $("rq").oninput=()=>{auto=null;$("rqh").textContent=""};
+    $("rv").addEventListener("change",pre);$("rr").addEventListener("change",pre);$("rb").oninput=pre;pre();
+  };
+  bindItemSearch("rs",it=>{item=it;fill()},r?null:unframedList);
+  if(item){$("rs").value=item.name;fill()}
+  $("rc").onclick=()=>{m.remove();openSpot(spotId)};
+  if(r)$("rd").onclick=()=>{if(!confirm("刪除這個框？"))return;s.regions=s.regions.filter(x=>x!==r);save();m.remove();openSpot(spotId)};
+  $("ro").onclick=async()=>{
+    if(!item){alert("請先選品項");return}
+    const front=parseInt($("rq").value,10);if(!(front>=0)){alert("請輸入前排數量");return}
+    const rows=+$("rr").value,back=rows>1?Math.max(0,parseInt($("rb").value,10)||0):0;
+    if(item.isNew){if(D.items.some(i=>i.name===item.name)){alert("已有這個品項");return}item={id:uid(),name:item.name,unit:$("ru").value,safe:SAFE,exp:$("ru").value!=="只"};D.items.push(item)}
+    let k=$("rv").value?D.skus.find(x=>x.id===$("rv").value):null;
+    if(!k){const vn=$("rvn").value.trim();k=D.skus.find(x=>x.item===item.id&&x.vendor===vn);
+      /* 原本不知道品牌的那組（還沒框）就是這個品牌：補上品牌名，不另外多一組，免得同一批貨算兩次 */
+      if(!k&&vn){const b=blankOf(item);if(b){b.vendor=vn;k=b}}
+      if(!k){k={id:uid(),item:item.id,vendor:vn,qty:0,mode:"photo",hist:[]};D.skus.push(k)}}
+    k.mode=$("rm").value;
+    const reg=r||{id:uid(),...newRect};reg.sku=k.id;reg.rows=rows;reg.front=front;reg.back=back;reg.cols=+$("rcol").value;
+    const img=await blobImg(await pget(s.photo));setBase(gray(img,MEASURE_W),reg);
+    if(!r)s.regions.push(reg);
+    k.qty=D.spots.flatMap(x=>x.regions).filter(x=>x.sku===k.id).reduce((t,x)=>t+x.front+(x.back||0),0);snap(k);
+    save();m.remove();
+    if(reg.h0<.03&&k.mode==="photo")toast("這個框裡看不出堆高，盤點時可能估不出來",3500);
+    if(itemOf(k).exp&&!D.batches.some(b=>b.sku===k.id))labelSheet(k,()=>openSpot(spotId));else openSpot(spotId);
+  };
+}
+
+/* 標籤 → 第一批（有效日期） */
+function labelSheet(k,after,batch,noCam,same){
+  /* 已經有一批沒填日期的就補在那批上，不另外多開一批（不然包數會重複算） */
+  batch=batch||D.batches.find(b=>b.sku===k.id&&b.qty>0&&!b.exp);
+  /* 進貨：同品牌上一批有日期，先問是不是一樣（一樣就不用拍），相機不自動開 */
+  const prev=same&&!(batch&&batch.exp)?D.batches.filter(b=>b.sku===k.id&&b!==batch&&b.exp).sort((a,b)=>(a.d||"")<(b.d||"")?-1:(a.d||"")>(b.d||"")?1:0).pop():null;
+  if(prev)noCam=true;
+  ocrEngine().catch(()=>{});
+  const m=sheet(`<h3>${esc(skuName(k))}：拍標籤</h3><div class="mu">拍「下一包要用的那包」（前排、最上面）的標籤，靠近、讓標籤佔滿畫面、避開反光。${batch?`這一批 ${batch.qty} ${esc(unitOf(k))}。`:`現有 ${k.qty} ${esc(unitOf(k))}都算這一批。`}</div>
+    ${prev?`<button class="btn" id="lsm" style="width:100%;margin-top:10px">跟上一批一樣：有效 ${prev.exp}</button><div class="mu" style="margin-top:4px">不一樣就按下面「拍標籤」或自己打日期。</div>`:""}
+    <div id="lp" style="margin-top:8px"></div>
+    <label class="mu">有效日期（照標籤上的數字打，民國年也可以）</label><input type="hidden" id="le">
+    <div class="row"><input type="number" inputmode="numeric" id="ly" placeholder="29" style="flex:5;min-width:0;width:auto;font-size:18px"><span style="flex:none">年</span><input type="number" inputmode="numeric" id="lmo" placeholder="5" style="flex:3;min-width:0;width:auto;font-size:18px"><span style="flex:none">月</span><input type="number" inputmode="numeric" id="ldd" placeholder="9" style="flex:3;min-width:0;width:auto;font-size:18px"><span style="flex:none">日</span></div>
+    <div class="mu" id="lsh" style="margin-top:4px"></div>
+    <div class="row wrap" id="lrc" style="margin-top:6px"></div>
+    <div class="row wrap" style="margin-top:6px"><span class="mu">這是製造日期：</span>${[2,3,5].map(n=>`<button class="btn s sm" data-y="${n}">＋${n} 年</button>`).join("")}</div>
+    <div class="row" style="margin-top:12px"><button class="btn s grow" id="ls">先跳過</button><button class="btn s" id="lc">拍標籤</button><button class="btn grow" id="lo">儲存</button></div>`);
+  /* 三格輸入 ⇄ 隱藏的 yyyy-mm-dd；年可打 2029、29 或民國 118，整串可打 290509 */
+  const sync=()=>{let y=parseInt($("ly").value,10),mo=parseInt($("lmo").value,10),d=parseInt($("ldd").value,10)||1;
+    if(y>=100&&y<200)y+=1911;else if(y<100)y+=2000;
+    const x=new Date(y,mo-1,d),ok=y>=2000&&y<2100&&mo>=1&&mo<=12&&x.getMonth()===mo-1;
+    $("le").value=ok?y+"-"+pad(mo)+"-"+pad(d):"";$("lsh").textContent=ok?`＝ ${y} 年 ${mo} 月 ${d} 日（西元）`:($("ly").value?"日期不完整或不對":"")};
+  let mfg="";
+  const setLE=v=>{if(!v)return;const[y,mo,d]=v.split("-");$("ly").value=+y;$("lmo").value=+mo;$("ldd").value=+d;sync()};
+  $("ly").oninput=()=>{mfg="";const v=$("ly").value;
+    /* 整串打在年那格也可以：20290509、1180509 */
+    const m=v.match(/^(20\d\d)(\d\d)(\d\d)$/)||v.match(/^(1\d\d)(\d\d)(\d\d)$/)||v.match(/^(2[1-9]|[3-9]\d)(\d\d)(\d\d)$/);if(m){$("ly").value=+m[1];$("lmo").value=+m[2];$("ldd").value=+m[3];sync();$("ldd").blur();return}
+    /* 年可以只打後兩碼（29＝2029）；打「20」還分不出是不是要打四碼，就等下一碼 */
+    sync();if(v.length>=4||(v.length===3&&+v>=100&&+v<200)||(v.length===2&&v!=="20"&&v[0]!=="1"))$("lmo").focus()};
+  $("lmo").oninput=()=>{mfg="";const v=$("lmo").value;sync();if(v.length===2||+v>1)$("ldd").focus()};
+  $("ldd").oninput=()=>{mfg="";sync()};
+  if(batch&&batch.exp)setLE(batch.exp);
+  $("lc").textContent=batch&&batch.photo?"重拍":"拍標籤";
+  let photo=null,raw=null,gen=0,fresh=false,ocrLog=null;
+  const read=async(ocr=true)=>{const my=++gen;photo=fresh?await shrinkBlob(raw,1600,.85):raw;
+    $("lp").innerHTML=`<img class="ph" src="${URL.createObjectURL(photo)}"><div class="row"><div class="mu grow" id="lst">${ocr?"讀取日期中…（可以先自己填）":"之前拍的標籤"}</div><button class="btn s sm" id="lr">↻ 轉正</button></div>`;
+    $("lr").onclick=async()=>{gen++;const c=rotCanvas(toCanvas(await blobImg(raw,2000),2000),90);raw=await cBlob(c,.92);fresh=true;read()};
+    if(!ocr)return;const before=$("le").value;
+    try{const t0=Date.now();const d=await readLabelDate(raw,()=>my===gen);if(my!==gen)return;ocrLog={d,s:Math.round((Date.now()-t0)/100)/10,e:2};if(!$("lst"))return;
+      if(d&&$("le").value===before){setLE(d);$("lst").textContent="讀到日期，請確認是不是有效日期"}else if(d)$("lst").textContent=`讀到 ${d}，你已經自己填了，沒有蓋掉`;else $("lst").textContent="讀不到日期。字是歪的就按「轉正」，不然請自己填（下次靠近一點、讓標籤佔滿畫面）"}
+    catch(e){if($("lst"))$("lst").textContent="讀取失敗："+e.message}};
+  /* 系統相機：拍完畫面最下面右半邊＝確認、左半邊＝取消（這支手機的相機 App 圖示不會顯示） */
+  const got=b=>{if(!b)return;raw=b;fresh=true;read()};
+  const shoot=async()=>{got(await camera(skuName(k)+"：拍標籤",null,"label"))};
+  $("lc").onclick=shoot;
+  /* 製造日＋年限−1 天；連按不同年限都從同一個製造日算，改了日期才重新記 */
+  m.querySelectorAll("[data-y]").forEach(b=>b.onclick=()=>{const v=mfg||$("le").value;if(!v){alert("先填日期");return}mfg=v;setLE(mfgToExp(v,+b.dataset.y));$("lsh").textContent+=`　製造 ${v}＋${b.dataset.y} 年`});
+  /* 同一批貨常常同一天，最近填過的點一下就好 */
+  const rc=[...new Set(D.batches.map(b=>b.exp).reverse())].filter(e=>e&&e>today()).slice(0,4);
+  $("lrc").innerHTML=rc.length?`<span class="mu">最近填過：</span>`+rc.map(e=>`<button class="btn s sm" data-rc="${e}">${e}</button>`).join(""):"";
+  $("lrc").querySelectorAll("[data-rc]").forEach(b=>b.onclick=()=>{mfg="";setLE(b.dataset.rc)});
+  $("ls").onclick=()=>{m.remove();after&&after()};
+  if(prev)$("lsm").onclick=()=>{mfg="";setLE(prev.exp);$("lo").click()};
+  /* 拍了照卻沒日期就先問；存好後顯示存進去的日期，沒存到當下就看得出來 */
+  $("lo").onclick=async()=>{const ev=$("le").value;
+    if(!ev&&$("ly").value){alert("日期不完整或不對，請檢查年／月／日");return}
+    if(!ev&&photo&&!(batch&&batch.exp)&&!confirm("還沒填有效日期，確定要存嗎？"))return;
+    $("lo").disabled=true;const pid=photo&&fresh?await pput(photo):"";if(batch){batch.exp=$("le").value||batch.exp;if(pid)batch.photo=pid;if(ocrLog)batch.ocr=ocrLog}else D.batches.push({id:uid(),sku:k.id,qty:k.qty,exp:$("le").value||"",photo:pid,d:today(),ocr:ocrLog||undefined});save();m.remove();
+    const se=batch?batch.exp:ev;toast(se?"已存：有效 "+se:"已存（沒有日期）",3000);after&&after()};
+  if(batch&&batch.photo)pget(batch.photo).then(b=>{if(!b){if(!noCam)shoot();return}raw=b;read(!batch.exp)});else if(!noCam)shoot();
+}
+
+/* ========== 進貨 ========== */
+/* 一筆進貨：供應商（跟誰買）、照片、每行（品項＋品牌＋包數）。庫存照「品項＋品牌」算；每行建立一個批次 */
+const recvPhotos=r=>[...(r.photos||[]),r.photo].filter(Boolean);
+const supList=()=>[...new Set([...Object.keys(D.supBrand),...Object.values(D.brandSup||{}),...D.recv.map(r=>r.sup)].filter(Boolean))].sort();
+/* 供應商：進貨單記到的（k.sup）優先，沒有就用「品牌 → 固定供應商」對照表 */
+const supOf=k=>k.sup||(D.brandSup||{})[k.vendor]||"";
+const brandDL=()=>`<datalist id="brl">${brandList().map(v=>`<option value="${esc(v)}">`).join("")}</datalist>`;
+/* 品牌／供應商建議清單：Android 的 datalist 只會出現在鍵盤上方那一排，所以自己做。
+   欄位加 data-sug="brand" 或 "sup"，點了就在下面列出來，打字會篩選，沒有的直接打 */
+const SUG={brand:()=>brandList(),sup:()=>supList()};let sugBox=null,sugFor=null;
+function sugHide(){if(sugBox){sugBox.remove();sugBox=null;sugFor=null}}
+function sugShow(inp){
+  const q=inp.value.trim(),hits=SUG[inp.dataset.sug]().filter(v=>!q||(v.includes(q)&&v!==q));
+  if(!hits.length){sugHide();return}
+  if(!sugBox){sugBox=document.createElement("div");sugBox.className="sug sugf";document.body.appendChild(sugBox);
+    sugBox.onpointerdown=e=>e.preventDefault();
+    sugBox.onclick=e=>{const d=e.target.closest("[data-v]");if(!d||!sugFor)return;const i=sugFor;i.value=d.dataset.v;sugHide();i.dispatchEvent(new Event("input",{bubbles:true}));i.dispatchEvent(new Event("change",{bubbles:true}));sugHide()}}
+  sugFor=inp;const r=inp.getBoundingClientRect();
+  Object.assign(sugBox.style,{left:r.left+"px",top:r.bottom+2+"px",width:Math.max(r.width,140)+"px"});
+  sugBox.innerHTML=hits.slice(0,30).map(v=>`<div data-v="${esc(v)}">${esc(v)}</div>`).join("");
+}
+document.addEventListener("focusin",e=>{if(e.target.dataset&&e.target.dataset.sug)sugShow(e.target)});
+document.addEventListener("input",e=>{if(e.target===sugFor||(e.target.dataset&&e.target.dataset.sug&&document.activeElement===e.target))sugShow(e.target)});
+document.addEventListener("focusout",e=>{if(e.target===sugFor)setTimeout(()=>{if(document.activeElement!==sugFor)sugHide()},200)});
+document.addEventListener("scroll",()=>{if(sugFor)sugShow(sugFor)},true);
+const brandList=()=>[...new Set([...D.skus.map(k=>k.vendor),...Object.values(D.supBrand)].filter(Boolean))].sort();
+function recvSheet(){
+  const lines=[],photos=[];let n=0;
+  const m=sheet(`<h3>新增進貨</h3><div class="mu">同一批到貨的單子全部記在這一筆，單子每張都拍。</div>
+    <div class="row"><div class="grow"><label class="mu">供應商（跟誰買）</label><input type="text" id="cv" data-sug="sup" placeholder="例如 甲藥行"></div>
+    <div class="grow"><label class="mu">他家的品牌</label><input type="text" id="cbd" data-sug="brand" placeholder="例如 A牌"></div></div>
+    
+    <div class="mu" style="margin-top:4px">每一行的品牌預設是「他家的品牌」；出別家的貨就在那一行改。</div>
+    <div class="row" style="margin-top:8px"><button class="btn s sm" id="cp">📷 拍進貨單（可拍多張）</button><span class="mu" id="cps"></span></div><div class="row wrap" id="cpt" style="margin-top:6px"></div>
+    <div id="cls"></div>
+    <button class="btn s" id="cadd" style="margin-top:8px;width:100%">＋ 加一行</button>
+    <div class="mu" style="margin-top:8px">1 斤＝1 包。「1件」不用管，填包數就好。</div>
+    <div class="row" style="margin-top:12px"><button class="btn s grow" id="cc">取消</button><button class="btn grow" id="co">存檔</button></div>`);
+  const add=()=>{const i=n++;const L={i,item:null,qty:0,cold:false};lines.push(L);
+    const d=document.createElement("div");d.className="card";d.style.marginTop="8px";
+    d.innerHTML=`<div class="row"><b class="grow">品項</b><button class="btn s sm" data-x>✕</button></div>${itemSearchHtml("cl"+i)}
+      <div class="row" style="margin-top:6px"><input type="number" inputmode="numeric" placeholder="包數" id="cq${i}" style="width:90px;flex:none"><input type="text" id="cb${i}" data-sug="brand" placeholder="品牌（同上）"></div>
+      <label class="row mu" style="margin-top:6px"><input type="checkbox" id="cf${i}"> 放樓下</label>`;
+    $("cls").appendChild(d);
+    bindItemSearch("cl"+i,it=>{L.item=it;$("cf"+i).checked=!!it.loc;$("cq"+i).focus()});
+    $("cq"+i).onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();add()}};
+    d.querySelector("[data-x]").onclick=()=>{lines.splice(lines.indexOf(L),1);d.remove()};
+    setTimeout(()=>$("cl"+i).focus(),50)};
+  $("cadd").onclick=add;add();
+  $("cv").onchange=()=>{const b=D.supBrand[$("cv").value.trim()];if(b!=null&&!$("cbd").value)$("cbd").value=b};
+  const shot=async()=>{const b=await camera(`進貨單（第 ${photos.length+1} 張）`);if(!b)return;const ph=await shrinkBlob(b,1600,.8);photos.push(ph);
+    const im=document.createElement("img");im.src=URL.createObjectURL(ph);im.style.cssText="width:64px;height:64px;object-fit:cover;border-radius:6px";
+    im.onclick=()=>{if(confirm("刪掉這張照片？")){photos.splice(photos.indexOf(ph),1);im.remove();$("cps").textContent=photos.length?`已拍 ${photos.length} 張`:""}};
+    $("cpt").appendChild(im);$("cps").textContent=`已拍 ${photos.length} 張（點縮圖可刪）`};
+  $("cp").onclick=shot;
+  $("cc").onclick=()=>{if(lines.some(l=>l.item)&&!confirm("放棄這張進貨單？"))return;m.remove()};
+  $("co").onclick=async()=>{
+    const sup=$("cv").value.trim(),defB=$("cbd").value.trim()||sup;
+    for(const L of lines){L.qty=parseInt($("cq"+L.i).value,10);L.cold=$("cf"+L.i).checked;L.brand=$("cb"+L.i).value.trim()||defB;const t=$("cl"+L.i).value.trim();if(t&&(!L.item||L.item.name!==t))L.item=D.items.find(x=>x.name===t)||{name:t,isNew:true}}
+    const ok=lines.filter(l=>l.item&&l.qty>0);
+    if(!ok.length){alert("至少要有一行品項和包數");return}
+    if(ok.length<lines.filter(l=>l.item).length&&!confirm("有品項沒填包數，那幾行會略過，繼續？"))return;
+    if(!sup&&!confirm("沒填供應商，繼續？"))return;
+    if(sup)D.supBrand[sup]=defB;
+    $("co").disabled=true;const r={id:uid(),d:today(),sup,photos:[],lines:[]};for(const ph of photos)r.photos.push(await pput(ph));const todo=[];
+    for(const L of ok){
+      let it=L.item.isNew?D.items.find(i=>i.name===L.item.name):D.items.find(i=>i.id===L.item.id);
+      if(!it){it={id:uid(),name:L.item.name,unit:"包",safe:SAFE,exp:true};D.items.push(it)}
+      it.loc=L.cold?"樓下":(it.loc==="樓下"?"":it.loc||"");
+      const vendor=L.brand;let k=D.skus.find(x=>x.item===it.id&&x.vendor===vendor);
+      if(!k){const ks=D.skus.filter(x=>x.item===it.id);
+        /* 只有一筆「不分品牌」的就直接當成這個品牌 */
+        if(vendor&&ks.length===1&&!ks[0].vendor){k=ks[0];k.vendor=vendor}else{k={id:uid(),item:it.id,vendor,qty:0,mode:"photo",hist:[]};D.skus.push(k)}}
+      if(sup)k.sup=sup;
+      const b={id:uid(),sku:k.id,qty:L.qty,exp:"",photo:"",d:today(),recv:r.id};D.batches.push(b);
+      k.qty+=L.qty;snap(k);r.lines.push({sku:k.id,n:L.qty,batch:b.id});if(it.exp)todo.push([k,b]);
+    }
+    D.recv.push(r);save();m.remove();render();toast("已入庫 "+r.lines.length+" 項");
+    recvLabels(todo);
+  };
+}
+/* 存檔後逐項拍標籤（可跳過，之後在進貨單裡補拍） */
+function recvLabels(todo){
+  if(!todo.length)return;
+  const m=sheet(`<h3>拍標籤（${todo.length} 項）</h3><div class="mu">每項拍一張標籤，自動讀有效日期。現在沒空可以先跳過，之後點進貨單補拍。</div>
+    <div class="row" style="margin-top:12px"><button class="btn s grow" id="rl0">之後再拍</button><button class="btn grow" id="rl1">開始拍</button></div>`);
+  $("rl0").onclick=()=>m.remove();
+  $("rl1").onclick=()=>{m.remove();const next=i=>{if(i>=todo.length){render();toast("標籤拍完了");return}labelSheet(todo[i][0],()=>next(i+1),todo[i][1],false,true)};next(0)};
+}
+async function recvView(id){
+  const r=D.recv.find(x=>x.id===id);const urls=[];for(const p of recvPhotos(r))urls.push(await purl(p));
+  const m=sheet(`<h3>${r.d}　${esc(r.sup||"未填供應商")}</h3><div class="mu">點數字可以改（當場退回、數錯）；改成 0 就是整行刪掉。</div>${urls.map(u=>`<img class="ph" src="${u}">`).join("")}
+    ${r.lines.map((l,i)=>{const k=D.skus.find(x=>x.id===l.sku),b=D.batches.find(x=>x.id===l.batch);return`<div class="row" style="padding:8px 0;border-bottom:1px solid var(--bd)"><div class="grow">${esc(k?skuName(k):"?")}<div class="mu">${b?.exp?"有效 "+b.exp:b?.photo?"📷 已拍，日期還沒填":"還沒拍標籤"}</div></div><button class="btn s sm" data-n="${i}" style="min-width:48px"><b>${l.n}</b></button>${k&&b&&itemOf(k).exp?`<button class="btn s sm" data-i="${i}">標籤</button>`:""}</div>`}).join("")}
+    <div class="row" style="margin-top:12px"><button class="btn d" id="rvd">刪除這張</button><button class="btn grow" id="rvc">關閉</button></div>`);
+  m.querySelectorAll("[data-i]").forEach(bt=>bt.onclick=()=>{const l=r.lines[+bt.dataset.i];m.remove();labelSheet(D.skus.find(x=>x.id===l.sku),()=>recvView(id),D.batches.find(x=>x.id===l.batch),false,true)});
+  m.querySelectorAll("[data-n]").forEach(bt=>bt.onclick=()=>{const l=r.lines[+bt.dataset.n],k=D.skus.find(x=>x.id===l.sku),b=D.batches.find(x=>x.id===l.batch);
+    const v=prompt(`${k?skuName(k):""}：實際收下幾包？（0＝這行刪掉）`,l.n);if(v==null)return;const n=parseInt(v,10);if(!(n>=0)){alert("請輸入數字");return}
+    const d=n-l.n;if(k){k.qty=Math.max(0,k.qty+d);if(b)b.qty=Math.max(0,b.qty+d);snap(k)}
+    if(n===0){r.lines.splice(+bt.dataset.n,1);D.batches=D.batches.filter(x=>x!==b)}else l.n=n;
+    if(!r.lines.length)D.recv=D.recv.filter(x=>x!==r);save();m.remove();render();if(r.lines.length)recvView(id)});
+  $("rvc").onclick=()=>m.remove();
+  $("rvd").onclick=()=>{if(!confirm("刪除這張進貨單？加上去的包數會扣回來"))return;
+    for(const l of r.lines){const k=D.skus.find(x=>x.id===l.sku);D.batches=D.batches.filter(b=>b.id!==l.batch);if(k){k.qty=Math.max(0,k.qty-l.n);snap(k)}}
+    D.recv=D.recv.filter(x=>x!==r);save();m.remove();render()};
+}
+
+/* ========== 出貨 ========== */
+/* D.ships=[{id,d,kind:"slip"|"retail"|"loss",no,cust,why,photos,lines:[{raw,q,u,n,sku,took,bt:[[批次id,扣幾包]],skip,fix,to}]}]
+   fix＝補數時帳上加了多少、to＝補成幾包；有 fix 就不算帳不夠
+   D.alias={單上名稱:{sku,per,u}|{skip:1}}：per＝1 斤幾包（半斤裝是 2），教過一次就記住 */
+const SHIPK={slip:"出貨單",retail:"零售",loss:"損耗"};
+const shipShort=l=>!l.skip&&!l.down&&l.took<l.n&&l.fix===undefined;
+const shipKey=s=>s.replace(/\s/g,"").replace(/（/g,"(").replace(/）/g,")");
+/* 斤、兩換算成帳上的單位；不滿一包算一包 */
+const shipN=(q,u,per,unit)=>u==="個"?q:unit==="兩"?(u==="兩"?q:q*16):Math.ceil((u==="兩"?q/16:q)*per-1e-9);
+/* 按顆賣、按盒入帳的（特羅漢果一盒 6 顆，k.pc）：顆數換成盒；剛好整桶（k.bulk 的倍數）是桶裝出貨，桶裝沒入帳，不扣 */
+const shipNk=(q,u,per,k)=>k&&k.pc&&u==="個"?(k.bulk&&q%k.bulk===0?0:Math.ceil(q/k.pc-1e-9)):shipN(q,u,per,k?unitOf(k):"包");
+/* 教過的名稱；運費、「名稱(數字)」的罐裝品不追蹤 */
+function shipAuto(raw){const a=D.alias[raw];
+  if(a&&a.skip)return{skip:1};
+  if(a&&D.skus.some(k=>k.id===a.sku))return{sku:a.sku,per:a.per,u:a.u};
+  return/^運費|\(\d+\w*\)$/.test(raw)?{skip:1}:null}
+/* 第一次看到的名稱：把片、粉、規格、品牌字拿掉後找相近的給人選，不自動決定 */
+function shipCands(raw){const half=/^\d+\/\d+/.test(raw),c=raw.replace(/^\d+\/\d+|^\(.\)/,"").replace(/[片粉]$/,"");
+  const score=k=>{const n=itemOf(k).name;let s=[...new Set(c)].filter(x=>n.includes(x)).length/Math.max(c.length,n.length,1);
+    if(half&&n.includes("半斤"))s+=.5;if(k.vendor)s+=raw.includes(k.vendor)?.3:raw[0]===k.vendor[0]?.1:0;return s};
+  return D.skus.map(k=>[k,score(k)]).filter(x=>x[1]>=.5).sort((a,b)=>b[1]-a[1]).slice(0,6).map(x=>x[0])}
+const shipPer=(raw,k)=>/^\d+\/\d+|半斤/.test(raw+itemOf(k).name)?2:1;
+const shipU=k=>{const u=unitOf(k);return u==="只"||u==="罐"?"個":u==="兩"?"兩":"斤"};
+/* 看大圖：點一下放大到點的位置，再點一下縮回；onDel 有給才有「刪掉這張」 */
+function photoView(src,onDel){
+  const v=document.createElement("div");v.className="modal";v.style.cssText="background:#000;flex-direction:column;align-items:stretch;z-index:40";
+  v.innerHTML=`<div class="pvw" style="flex:1;overflow:auto"><img src="${src}" style="width:100%;display:block"></div>
+    <div class="row" style="padding:8px 12px;gap:8px"><span class="grow" style="color:#ccc;font-size:14px">點照片放大／縮小</span>${onDel?`<button class="btn d sm" data-d>刪掉這張</button>`:""}<button class="btn sm" data-c>關閉</button></div>`;
+  document.body.appendChild(v);
+  const w=v.querySelector(".pvw"),im=w.querySelector("img");let z=false;
+  im.onclick=e=>{const r=im.getBoundingClientRect(),fx=(e.clientX-r.left)/r.width,fy=(e.clientY-r.top)/r.height;z=!z;im.style.width=z?"250%":"100%";
+    if(z){w.scrollLeft=fx*im.offsetWidth-w.clientWidth/2;w.scrollTop=fy*im.offsetHeight-w.clientHeight/2}};
+  v.querySelector("[data-c]").onclick=()=>v.remove();
+  if(onDel)v.querySelector("[data-d]").onclick=()=>{if(confirm("刪掉這張照片？")){v.remove();onDel()}};
+}
+function shipSheet(kind,q){
+  const slip=kind==="slip",lines=[],photos=[];let n=0;
+  if(slip)ocrWarm();if(q)_slipOpen=q.id;
+  const m=sheet(`<h3>${q?"確認出貨單":slip?"記出貨單":"記零售／損耗"}</h3>
+    ${slip?`<div class="row"><div class="grow"><label class="mu">單號</label><input type="text" inputmode="numeric" id="sno"></div><div class="grow"><label class="mu">客戶（可不填）</label><input type="text" id="scu"></div></div><div class="mu or" id="sdup"></div>`
+      :`<div class="row wrap"><button class="btn sm" data-k="retail">零售</button><button class="btn sm s" data-k="loss">損耗</button></div><label class="mu">原因（可不填）</label><input type="text" id="swhy">`}
+    <label class="mu">日期</label><input type="date" id="sd" value="${today()}">
+    ${slip?`<div class="row" style="margin-top:8px"><button class="btn s sm" id="sp">📷 拍單（可不拍）</button><span class="mu" id="sps"></span></div><div class="mu" style="font-size:13px">點縮圖看大圖</div><div class="row wrap" id="spt" style="margin-top:6px"></div>`:""}
+    <div id="sls"></div>
+    <button class="btn s" id="sadd" style="margin-top:8px;width:100%">＋ 加一行</button>
+    ${slip?`<div class="mu" style="margin-top:8px">1 斤＝1 包，不滿一包扣 1 包。半斤裝把「1 斤＝」改成 2。</div>`:""}
+    <div class="row" style="margin-top:12px"><button class="btn s grow" id="sc">${q?"等一下再看":"取消"}</button><button class="btn grow" id="so">存檔</button></div>
+    ${q?`<button class="btn d sm" id="sqd" style="margin-top:10px">刪掉這張待確認單</button>`:""}`);
+  const close=()=>{if(q)_slipOpen=null;m.remove()};
+  const qtyOf=L=>parseFloat($("sq"+L.i).value);
+  const skuOf=L=>L.map&&L.map.sku?D.skus.find(k=>k.id===L.map.sku):null;
+  const calc=L=>{const k=skuOf(L),r=$("sr"+L.i);L.u=$("su"+L.i).value;L.per=parseFloat($("spp"+L.i).value)||1;
+    const un=k?unitOf(k):"包";$("sp"+L.i).style.display=slip&&L.map&&!L.map.skip&&L.u!=="個"&&un!=="兩"?"":"none";
+    const q=qtyOf(L);if(!L.map||L.map.skip||!(q>0)){r.textContent="";return}
+    const N=k?shipNk(q,L.u,L.per,k):shipN(q,L.u,L.per,un);r.className=k&&N>k.qty?"dn":"mu";
+    if(k&&itemOf(k).loc==="樓下"){r.className="mu";r.textContent="樓下的貨，暫時不扣帳";return}
+    if(k&&k.pc&&k.bulk&&L.u==="個"&&!N){r.textContent=`整桶出貨，桶裝沒入帳，不扣`;return}
+    r.textContent=`扣 ${N} ${un}`+(k&&k.pc&&L.u==="個"?`（一${un} ${k.pc} 顆）`:"")+(k?`（帳上 ${k.qty}${N>k.qty?"，不夠":""}）`:"")};
+  const choose=(L,k)=>{L.map={sku:k.id};L.pick=false;if(slip){$("spp"+L.i).value=shipPer(L.raw,k);$("su"+L.i).value=shipU(k)}draw(L);$("sq"+L.i).focus()};
+  const draw=L=>{const el=$("sm"+L.i),k=skuOf(L);
+    if(L.map){el.innerHTML=`<div class="row" style="margin-top:6px"><div class="grow ${L.map.skip?"mu":""}">${L.map.skip?"不追蹤，不扣帳":L.map.newName?`→ 新品項「${esc(L.map.newName)}」`:`→ ${esc(k?skuName(k):"?")}`}</div><button class="btn s sm" data-c>改</button></div>`;
+      el.querySelector("[data-c]").onclick=()=>{L.map=null;L.pick=true;draw(L)};calc(L);return}
+    if(!L.pick){el.innerHTML="";calc(L);return}
+    const cs=slip?shipCands(L.raw):[];
+    el.innerHTML=`<div style="background:#fff7e6;border-radius:8px;padding:8px;margin-top:6px">${slip?`<div class="or">第一次看到，這是哪一個？</div>`:""}
+      ${cs.length?`<div class="sug" style="background:#fff">${cs.map(c=>`<div data-sku="${c.id}">${esc(skuName(c))}<span class="mu">　帳上 ${c.qty}</span></div>`).join("")}</div>`:""}
+      ${itemSearchHtml("ss"+L.i)}<div id="sb${L.i}"></div>
+      ${slip?`<button class="btn s sm" data-sk style="margin-top:6px">這項不追蹤</button>`:""}</div>`;
+    const bindSku=box=>box.querySelectorAll("[data-sku]").forEach(d=>d.onclick=()=>choose(L,D.skus.find(c=>c.id===d.dataset.sku)));
+    bindSku(el);
+    const sk=el.querySelector("[data-sk]");if(sk)sk.onclick=()=>{L.map={skip:1};L.pick=false;draw(L)};
+    bindItemSearch("ss"+L.i,it=>{if(it.isNew){L.map={newName:it.name};L.pick=false;draw(L);$("sq"+L.i).focus();return}
+      const ks=D.skus.filter(c=>c.item===it.id);
+      if(ks.length===1){choose(L,ks[0]);return}
+      if(!ks.length){L.map={newName:it.name};L.pick=false;draw(L);return}
+      const b=$("sb"+L.i);b.innerHTML=`<div class="sug" style="background:#fff">${ks.map(c=>`<div data-sku="${c.id}">${esc(skuName(c))}<span class="mu">　帳上 ${c.qty}</span></div>`).join("")}</div>`;bindSku(b)});
+    calc(L)};
+  const resolve=L=>{L.raw=shipKey($("sn"+L.i).value.trim());const a=L.raw?shipAuto(L.raw):null;L.map=a;L.pick=!!L.raw&&!a;
+    if(a&&a.sku){$("spp"+L.i).value=a.per||1;$("su"+L.i).value=a.u||"斤"}draw(L)};
+  const add=x=>{const i=n++,L={i,raw:"",map:null,pick:!slip,u:slip?"斤":"個",per:1};lines.push(L);
+    const d=document.createElement("div");d.className="card";d.style.marginTop="8px";L.el=d;
+    d.innerHTML=`<div class="row">${slip?`<input type="text" id="sn${i}" placeholder="單上的品名" autocomplete="off">`:`<b class="grow">品項</b>`}<button class="btn s sm" data-x style="flex:none">✕</button></div>${slip?`<div id="sg${i}"></div>`:""}<div id="sm${i}"></div>
+      <div class="row" style="margin-top:6px"><input type="number" inputmode="decimal" id="sq${i}" placeholder="${slip?"數量":"幾包"}" style="width:76px;flex:none"><select id="su${i}" style="width:70px;flex:none;${slip?"":"display:none"}">${["斤","兩","個"].map(u=>`<option${u===L.u?" selected":""}>${u}</option>`).join("")}</select><span class="mu" id="sp${i}" style="display:none;white-space:nowrap">1 斤＝<input type="number" inputmode="decimal" id="spp${i}" value="1" style="width:52px;display:inline-block"></span></div><div class="mu" id="sr${i}"></div>`;
+    $("sls").appendChild(d);
+    d.querySelector("[data-x]").onclick=()=>{lines.splice(lines.indexOf(L),1);d.remove()};
+    for(const id of["sq","su","spp"])$(id+i).oninput=()=>calc(L);
+    $("sq"+i).onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();add()}};
+    if(slip){const inp=$("sn"+i),g=$("sg"+i);
+      inp.oninput=()=>{const q=shipKey(inp.value.trim());g.innerHTML="";if(!q)return;const hit=Object.keys(D.alias).filter(a=>a.includes(q)&&a!==q).slice(0,6);if(!hit.length)return;
+        g.innerHTML=`<div class="sug">${hit.map(a=>`<div data-a="${esc(a)}">${esc(a)}</div>`).join("")}</div>`;
+        g.querySelectorAll("[data-a]").forEach(x=>x.onclick=()=>{inp.value=x.dataset.a;g.innerHTML="";resolve(L);$("sq"+i).focus()})};
+      inp.onchange=()=>{setTimeout(()=>g.innerHTML="",200);inp.style.background="";resolve(L)};
+      inp.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();inp.blur();$("sq"+i).focus()}}}
+    if(x){/* 拍單讀出來的一行：沒把握的標黃，列最像的名稱給人點 */
+      const inp=$("sn"+i),g=$("sg"+i),q=$("sq"+i);inp.value=x.name;L.ocr=x.ocr;resolve(L);
+      if(x.u!=="斤")$("su"+i).value=x.u;if(x.q)q.value=x.q;else q.style.background="#fff7e6";q.addEventListener("input",()=>q.style.background="");
+      if(!x.sure){inp.style.background="#fff7e6";
+        g.innerHTML=`<div class="or" style="margin-top:4px">讀到「${esc(x.ocr)}」，請確認${x.cands.length?"，是不是：":""}</div>${x.cands.length?`<div class="sug">${x.cands.map(c=>`<div data-a="${esc(c)}">${esc(c)}</div>`).join("")}</div>`:""}`;
+        g.querySelectorAll("[data-a]").forEach(y=>y.onclick=()=>{inp.value=y.dataset.a;g.innerHTML="";inp.style.background="";resolve(L);$("sq"+i).focus()})}
+      else if(x.name!==x.ocr)g.innerHTML=`<div class="mu" style="margin-top:4px">讀到「${esc(x.ocr)}」，已改成「${esc(x.name)}」</div>`;
+      calc(L);return}
+    draw(L);setTimeout(()=>{const f=$(slip?"sn"+i:"ss"+i);if(f)f.focus()},50)};
+  $("sadd").onclick=()=>add();
+  if(q&&q.r.rows.length){const nm=slipNames();for(const x of q.r.rows)add({...x,...slipFix(x.ocr,nm)})}else add();
+  if(slip){
+    $("sno").oninput=()=>{const no=$("sno").value.trim(),x=no&&D.ships.find(r=>r.no===no);$("sdup").textContent=x?`這個單號 ${x.d} 記過了（${x.lines.length} 行）；存檔會併進去。`:""};
+    $("sp").onclick=async()=>{const b=await camera(`出貨單（第 ${photos.length+1} 張）`,null,"slip");if(!b)return;const ph=await shrinkBlob(b,1600,.8);photos.push(ph);
+      const im=document.createElement("img");im.src=URL.createObjectURL(ph);im.style.cssText="width:64px;height:64px;object-fit:cover;border-radius:6px";
+      im.onclick=()=>photoView(im.src,()=>{photos.splice(photos.indexOf(ph),1);im.remove();$("sps").textContent=photos.length?`已拍 ${photos.length} 張`:""});
+      $("spt").appendChild(im);$("sps").textContent=`已拍 ${photos.length} 張，讀單中…（第一次要等比較久）`;
+      /* 讀出來的行接在後面；原本空著的行拿掉。多頁的單拍第二張就接著加 */
+      let r=null;try{r=await readSlip(ph,()=>document.body.contains(m))}catch(e){}
+      if(!document.body.contains(m))return;
+      if(!r){$("sps").textContent=`已拍 ${photos.length} 張，讀不出來，請手動填（點縮圖可刪）`;return}
+      if(r.no&&!$("sno").value){$("sno").value=r.no;$("sno").oninput()}
+      if(r.cust&&!$("scu").value)$("scu").value=r.cust;
+      if(r.rows.length)for(const L of lines.slice())if(!$("sn"+L.i).value.trim()&&!$("sq"+L.i).value){lines.splice(lines.indexOf(L),1);L.el.remove()}
+      for(const x of r.rows)add(x);
+      const bad=r.rows.filter(x=>!x.sure||!x.q).length;
+      $("sps").textContent=`已拍 ${photos.length} 張，讀到 ${r.rows.length} 行`+(bad?`，黃色 ${bad} 行請看一下`:"，請掃一眼再存檔")}
+    if(q){if(q.r.no){$("sno").value=q.r.no;$("sno").oninput()}if(q.r.cust)$("scu").value=q.r.cust;
+      $("sd").value=new Date(q.t-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);
+      $("sps").textContent=q.st==="fail"?"讀不出來，請照照片手動填":(n=>n?`黃色 ${n} 行請看一下`:"請掃一眼再存檔")(q.r.rows.filter(x=>!x.sure||!x.q).length);
+      for(const id of q.ph){const im=document.createElement("img");im.style.cssText="width:64px;height:64px;object-fit:cover;border-radius:6px";purl(id).then(u=>im.src=u);
+        im.onclick=()=>purl(id).then(u=>photoView(u));$("spt").appendChild(im)}
+      $("sqd").onclick=async()=>{if(!confirm("刪掉這張待確認單和照片？"))return;D.slipQ.splice(D.slipQ.indexOf(q),1);for(const id of q.ph)await pdel(id);save();close();render()}}
+  }else{kind="retail";m.querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>{kind=b.dataset.k;m.querySelectorAll("[data-k]").forEach(x=>x.classList.toggle("s",x!==b))})}
+  const usedL=()=>lines.filter(L=>slip?L.raw:L.map);
+  $("sc").onclick=()=>{if(!q&&usedL().length&&!confirm("放棄這筆？"))return;close()};
+  $("so").onclick=async()=>{
+    if(slip)lines.forEach(L=>{if(shipKey($("sn"+L.i).value.trim())!==L.raw)resolve(L)});
+    const used=usedL();if(!used.length){alert("至少要有一行");return}
+    const nm=L=>L.raw||(skuOf(L)?skuName(skuOf(L)):L.map.newName);
+    const bad=used.find(L=>!L.map);if(bad){alert(`「${bad.raw}」還沒選是哪個品項`);return}
+    used.forEach(calc);
+    const noq=used.find(L=>!L.map.skip&&!(qtyOf(L)>0));if(noq){alert(`「${nm(noq)}」還沒填數量`);return}
+    const no=slip?$("sno").value.trim():"",exist=no?D.ships.find(r=>r.no===no):null;
+    if(slip&&!no&&!confirm("沒填單號，之後就查不出有沒有重複記。繼續？"))return;
+    if(exist&&!confirm(`單號 ${no} ${exist.d} 記過了（${exist.lines.length} 行）。多頁的單才要併進去；同一張重複記會扣兩次。\n確定併進去？`))return;
+    $("so").disabled=true;
+    const r=exist||{id:uid(),d:$("sd").value||today(),kind,no,cust:slip?$("scu").value.trim():"",why:slip?"":$("swhy").value.trim(),photos:[],lines:[]};
+    for(const ph of photos)r.photos.push(await pput(ph));
+    if(q){r.photos.push(...q.ph);const i=D.slipQ.indexOf(q);if(i>=0)D.slipQ.splice(i,1)}
+    /* 記住讀錯的字：下次讀到一樣的就直接改對 */
+    for(const L of used)if(L.ocr&&L.raw&&L.ocr!==L.raw)D.ocrFix[L.ocr]=L.raw;
+    for(const L of used){
+      if(L.map.skip){if(slip)D.alias[L.raw]={skip:1};r.lines.push({raw:L.raw,q:qtyOf(L)||0,u:L.u,skip:1});continue}
+      let k=skuOf(L);
+      if(!k){let it=D.items.find(i=>i.name===L.map.newName);if(!it){it={id:uid(),name:L.map.newName,unit:"包",safe:SAFE,exp:true};D.items.push(it)}
+        k=D.skus.find(x=>x.item===it.id);if(!k){k={id:uid(),item:it.id,vendor:"",qty:0,mode:"photo",hist:[]};D.skus.push(k)}}
+      if(slip)D.alias[L.raw]={sku:k.id,per:L.per,u:L.u};
+      if(itemOf(k).loc==="樓下"){r.lines.push({raw:L.raw,q:qtyOf(L),u:L.u,n:shipNk(qtyOf(L),L.u,L.per,k),sku:k.id,took:0,down:1,bt:[]});continue}
+      const N=shipNk(qtyOf(L),L.u,L.per,k),before=D.batches.filter(b=>b.sku===k.id).map(b=>[b,b.qty]),took=Math.min(N,k.qty);
+      k.qty-=took;snap(k);
+      r.lines.push({raw:L.raw,q:qtyOf(L),u:L.u,n:N,sku:k.id,took,bt:before.filter(([b,q])=>b.qty<q).map(([b,q])=>[b.id,q-b.qty])});
+    }
+    if(!exist)D.ships.push(r);save();close();render();
+    toast(`已記錄 ${used.length} 行`);
+    shipAsk(r);
+  };
+}
+/* 帳不夠扣時問架上實際剩幾包，填了就校正帳；留空的維持扣到 0、繼續標帳不夠。later＝事後從單子補填 */
+function shipAsk(r,later,done){
+  const ks=[...new Set(r.lines.filter(shipShort).map(l=>l.sku))].map(id=>D.skus.find(k=>k.id===id)).filter(Boolean);
+  if(!ks.length){if(done)done();return}
+  const m=sheet(`<h3>${later?"現在架上還剩幾包？":"帳上不夠，出完這張單架上還剩幾包？"}</h3><div class="mu">不確定的留空，之後可以從這張單補填。</div>
+    ${ks.map((k,i)=>{const ls=r.lines.filter(l=>!l.skip&&l.sku===k.id);return`<div class="row" style="padding:8px 0;border-bottom:1px solid var(--bd)"><div class="grow">${esc(skuName(k))}<div class="mu">要扣 ${ls.reduce((t,l)=>t+l.n,0)}，帳上 ${ls.reduce((t,l)=>t+l.took,0)}${later?`，目前帳上 ${k.qty}`:""}</div></div><input type="number" inputmode="decimal" id="sa${i}" placeholder="${esc(unitOf(k))}" style="width:76px;flex:none"></div>`}).join("")}
+    <div class="row" style="margin-top:12px"><button class="btn s grow" id="sal">之後再查</button><button class="btn grow" id="sao">存檔</button></div>`);
+  $("sal").onclick=()=>{m.remove();if(done)done()};
+  $("sao").onclick=()=>{
+    const vals=ks.map((k,i)=>$("sa"+i).value.trim());
+    if(vals.some(v=>v!==""&&!(parseFloat(v)>=0))){alert("數量要是 0 以上的數字");return}
+    ks.forEach((k,i)=>{if(vals[i]==="")return;const to=parseFloat(vals[i]);
+      r.lines.filter(l=>l.sku===k.id&&shipShort(l)).forEach((l,j)=>{l.fix=j?0:to-k.qty;l.to=to});
+      k.qty=to;snap(k)});
+    save();m.remove();render();if(done)done()};
+}
+function shipUndo(l){const k=D.skus.find(x=>x.id===l.sku);if(!k||l.skip)return;k.qty=Math.max(0,k.qty+l.took-(l.fix||0));for(const[id,n]of l.bt||[]){const b=D.batches.find(x=>x.id===id);if(b)b.qty+=n}snap(k)}
+async function shipView(id){
+  const r=D.ships.find(x=>x.id===id);const urls=[];for(const p of r.photos||[])urls.push(await purl(p));
+  const m=sheet(`<h3>${r.d}　${SHIPK[r.kind]}${r.no?"　"+esc(r.no):""}</h3>${r.cust||r.why?`<div class="mu">${esc(r.cust||r.why)}</div>`:""}${urls.filter(Boolean).map(u=>`<img class="ph" src="${u}">`).join("")}
+    ${r.lines.map((l,i)=>{const k=D.skus.find(x=>x.id===l.sku);return`<div class="row" style="padding:8px 0;border-bottom:1px solid var(--bd)"><div class="grow">${esc(l.raw||(k?skuName(k):"?"))}<div class="mu">${l.skip?"不追蹤":`${l.raw?"→ "+esc(k?skuName(k):"?")+"　":""}${l.raw?l.q+l.u+"，":""}${l.down?"樓下，不扣帳":"扣 "+l.took}`}</div>${shipShort(l)?`<div class="dn">要扣 ${l.n}，帳上只有 ${l.took}</div>`:l.fix!==undefined?`<div class="mu">要扣 ${l.n}，帳上只有 ${l.took}；補數後剩 ${l.to}</div>`:""}</div><button class="btn s sm" data-x="${i}">✕</button></div>`}).join("")}
+    ${r.lines.some(shipShort)?`<button class="btn" id="svf" style="width:100%;margin-top:12px">補數</button>`:""}
+    <div class="row" style="margin-top:12px"><button class="btn d" id="svd">整筆刪除（還原）</button><button class="btn grow" id="svc">關閉</button></div>`);
+  $("svc").onclick=()=>m.remove();m.querySelectorAll("img.ph").forEach(i=>i.onclick=()=>photoView(i.src));
+  if($("svf"))$("svf").onclick=()=>{m.remove();shipAsk(r,true,()=>shipView(id))};
+  m.querySelectorAll("[data-x]").forEach(b=>b.onclick=()=>{if(!confirm("刪掉這行，數量加回去？"))return;const l=r.lines[+b.dataset.x];shipUndo(l);r.lines.splice(+b.dataset.x,1);
+    if(!r.lines.length)D.ships=D.ships.filter(x=>x!==r);save();m.remove();render();if(r.lines.length)shipView(id)});
+  $("svd").onclick=()=>{if(!confirm("整筆刪除，數量加回去？"))return;r.lines.forEach(shipUndo);D.ships=D.ships.filter(x=>x!==r);save();m.remove();render()};
+}
+function aliasSheet(){
+  const m=sheet(`<h3>品名對照（${Object.keys(D.alias).length}）</h3><div class="mu">對錯了就刪掉，下次出貨單會再問一次。已經扣的帳不會變。</div><input type="search" id="alq" placeholder="搜尋" style="margin-top:6px"><div id="all"></div><button class="btn" id="alc" style="width:100%;margin-top:12px">關閉</button>`);
+  const show=()=>{const q=$("alq").value.trim(),rows=Object.entries(D.alias).filter(([a,v])=>{const k=D.skus.find(x=>x.id===v.sku);return!q||a.includes(q)||(k&&skuName(k).includes(q))}).sort((a,b)=>a[0].localeCompare(b[0],"zh-Hant"));
+    $("all").innerHTML=rows.map(([a,v])=>{const k=D.skus.find(x=>x.id===v.sku);return`<div class="row" style="padding:8px 0;border-bottom:1px solid var(--bd)"><div class="grow">${esc(a)}<div class="mu">${v.skip?"不追蹤":"→ "+esc(k?skuName(k):"已刪除的品項")+(v.per>1?`　1 斤＝${v.per}`:"")}</div></div><button class="btn s sm" data-a="${esc(a)}">✕</button></div>`}).join("")||`<div class="mu" style="margin-top:8px">還沒有。記出貨單時教過的名稱會出現在這裡。</div>`;
+    $("all").querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>{delete D.alias[b.dataset.a];save();show()})};
+  $("alq").oninput=show;show();$("alc").onclick=()=>{m.remove();render()};
+}
+
+/* ========== 退換貨 ========== */
+/* cust 客人退回（完整的才加回，算回最舊那批）、back 退回供應商（扣庫存）、swap 供應商換貨（數量不變、換有效日期） */
+const MOVE={cust:"客人退回",back:"退回供應商",swap:"換貨"};
+const batchesOf=k=>D.batches.filter(b=>b.sku===k.id).sort((a,b)=>(a.exp||"9")<(b.exp||"9")?-1:(a.exp||"9")>(b.exp||"9")?1:a.d<b.d?-1:1);
+function moveSheet(){
+  let item=null,type="cust";
+  const m=sheet(`<h3>退換貨</h3>
+    <div class="row wrap">${Object.entries(MOVE).map(([k,v])=>`<button class="btn sm ${k==="cust"?"":"s"}" data-t="${k}">${v}</button>`).join("")}</div>
+    <div class="mu" id="mth" style="margin:6px 0"></div>
+    ${itemSearchHtml("ms")}<div id="mf"></div>
+    <div class="row" style="margin-top:12px"><button class="btn s grow" id="mc">取消</button><button class="btn grow" id="mo">存檔</button></div>`);
+  const hint={cust:"完整、可以再賣的才記；拆過的算損耗，不用記。會加回最舊的那一批。",back:"品質不好、即期品退回去。會從庫存扣掉。",swap:"數量不變，存檔後拍新標籤、換成新的有效日期。"};
+  const fill=()=>{$("mth").textContent=hint[type];if(!item){$("mf").innerHTML="";return}
+    const ks=D.skus.filter(k=>k.item===item.id);
+    $("mf").innerHTML=`<label class="mu">品牌</label><select id="mk">${ks.map(k=>`<option value="${k.id}">${esc(k.vendor||"（不分品牌）")}（現有 ${k.qty}）</option>`).join("")}</select>
+      ${type==="cust"?"":`<label class="mu">哪一批</label><select id="mb"></select>`}
+      <label class="mu">${type==="swap"?"換幾包":"幾包"}</label><input type="number" inputmode="numeric" id="mn">
+      <label class="mu">原因（可不填）</label><input type="text" id="mw" placeholder="${type==="cust"?"例如 客人買錯":"例如 發霉、快過期"}">`;
+    const fb=()=>{if(!$("mb"))return;const k=D.skus.find(x=>x.id===$("mk").value);const bs=batchesOf(k).filter(b=>b.qty>0);
+      $("mb").innerHTML=bs.map(b=>`<option value="${b.id}">${b.exp?"有效 "+b.exp:"未填效期"}（${b.qty} 包，${b.d} 進）</option>`).join("")||`<option value="">（沒有批次紀錄）</option>`};
+    $("mk").onchange=fb;fb()};
+  m.querySelectorAll("[data-t]").forEach(b=>b.onclick=()=>{type=b.dataset.t;m.querySelectorAll("[data-t]").forEach(x=>x.classList.toggle("s",x!==b));fill()});
+  bindItemSearch("ms",it=>{if(it.isNew){alert("找不到這個品項");return}item=it;fill()});
+  fill();
+  $("mc").onclick=()=>m.remove();
+  $("mo").onclick=()=>{
+    if(!item){alert("請先選品項");return}
+    const k=D.skus.find(x=>x.id===$("mk").value),n=parseInt($("mn").value,10);if(!(n>0)){alert("請輸入包數");return}
+    let b=$("mb")&&$("mb").value?D.batches.find(x=>x.id===$("mb").value):null;
+    if(type!=="cust"&&n>k.qty&&!confirm(`現有只有 ${k.qty} 包，確定？`))return;
+    const x={id:uid(),d:today(),type,sku:k.id,n,why:$("mw").value.trim()};
+    if(type==="cust"){b=batchesOf(k)[0];if(!b){b={id:uid(),sku:k.id,qty:0,exp:"",photo:"",d:today()};D.batches.push(b)}b.qty+=n;k.qty+=n;x.batch=b.id;snap(k)}
+    else if(type==="back"){if(b){const t=Math.min(n,b.qty);b.qty-=t;x.bn=t;x.batch=b.id}k.qty=Math.max(0,k.qty-n);snap(k)}
+    else{/* 換貨：整批都換就直接改那批的日期；只換一部分就拆一批新的出來 */
+      if(b&&n<b.qty){b.qty-=n;const nb={id:uid(),sku:k.id,qty:n,exp:b.exp,photo:"",d:today()};D.batches.push(nb);x.from=b.id;b=nb}
+      else if(!b){b={id:uid(),sku:k.id,qty:Math.min(n,k.qty),exp:"",photo:"",d:today()};D.batches.push(b)}
+      x.batch=b.id;x.oldExp=b.exp}
+    D.moves.push(x);save();m.remove();render();toast("已記錄："+MOVE[type]);
+    if(type==="swap")labelSheet(k,render,b);
+  };
+}
+function moveView(id){
+  const x=D.moves.find(y=>y.id===id),k=D.skus.find(y=>y.id===x.sku),b=D.batches.find(y=>y.id===x.batch);
+  const m=sheet(`<h3>${MOVE[x.type]}</h3><div>${x.d}　${esc(k?skuName(k):"?")}　${x.n} 包</div>${x.why?`<div class="mu">原因：${esc(x.why)}</div>`:""}
+    ${x.type==="swap"?`<div class="mu">有效日期：${x.oldExp||"未填"} → ${b?.exp||"未填"}</div>`:""}
+    <div class="row" style="margin-top:12px"><button class="btn d" id="xd">刪除（還原）</button>${x.type==="swap"&&k&&b?'<button class="btn s" id="xl">拍新標籤</button>':""}<button class="btn grow" id="xc">關閉</button></div>`);
+  $("xc").onclick=()=>m.remove();
+  if($("xl"))$("xl").onclick=()=>{m.remove();labelSheet(k,render,b)};
+  $("xd").onclick=()=>{if(!confirm("刪除這筆，數量還原？"))return;
+    if(k){if(x.type==="cust"){k.qty=Math.max(0,k.qty-x.n);if(b)b.qty=Math.max(0,b.qty-x.n);snap(k)}
+      else if(x.type==="back"){k.qty+=x.n;if(b&&x.bn)b.qty+=x.bn;snap(k)}
+      else if(b){b.exp=x.oldExp||"";const f=D.batches.find(y=>y.id===x.from);if(f){f.qty+=b.qty;D.batches=D.batches.filter(y=>y!==b)}}}
+    D.moves=D.moves.filter(y=>y!==x);save();m.remove();render()};
+}
+
+/* ========== 品項 ========== */
+let iq="";
+/* 這個品牌框在哪幾個拍攝點 */
+const spotsOf=k=>spotsSorted().filter(s=>s.regions.some(r=>r.sku===k.id));
+function vItems(a){
+  const list=D.items.filter(i=>!iq||i.name.includes(iq)).sort((x,y)=>x.name.localeCompare(y.name,"zh-Hant"));
+  a.innerHTML=`<div class="row"><input type="search" id="iq" placeholder="搜尋品項" value="${esc(iq)}"><button class="btn" onclick="itemSheet()">新增</button></div>
+  <div class="mu" style="margin:6px 0">${D.items.length} 項</div>
+  ${list.map(i=>{const ks=D.skus.filter(k=>k.item===i.id),t=totalOf(i),pl=[...new Set(ks.flatMap(k=>spotsOf(k).map(s=>s.name)))];
+    return`<div class="card" onclick="itemSheet('${i.id}')"><div class="row"><b class="grow">${esc(i.name)}</b><span>${t} ${esc(i.unit)}</span>${ks.some(lowSku)?'<span class="tag t-red">要補貨</span>':""}</div>
+    <div class="mu">${ks.length>1||ks[0]?.vendor?ks.map(k=>esc(k.vendor||"不分品牌")+" "+k.qty).join("、"):""}${i.loc?"　📍"+esc(i.loc):pl.length?"　📍"+pl.map(esc).join("、"):"（還沒有位置）"}</div></div>`}).join("")}`;
+  const q=$("iq");q.oninput=()=>{iq=q.value.trim();const p=q.selectionStart;render();const n=$("iq");n.focus();n.setSelectionRange(p,p)};
+}
+function itemSheet(id){
+  const it=id?D.items.find(i=>i.id===id):null;
+  const ks=it?D.skus.filter(k=>k.item===it.id):[];
+  const m=sheet(`<h3>${it?"品項":"新增品項"}</h3>
+    <label class="mu">品名</label><input type="text" id="in" value="${esc(it?.name||"")}">
+    <div class="row"><div class="grow"><label class="mu">單位</label><select id="iu">${UNITS.map(u=>`<option ${(it?.unit||"包")===u?"selected":""}>${u}</option>`).join("")}</select></div>
+    <div class="grow"><label class="mu">安全量</label><input type="number" inputmode="numeric" id="is" value="${it?.safe??SAFE}"></div></div>
+    <label class="row" style="margin-top:10px"><input type="checkbox" id="isep" ${it?.sep?"checked":""}> 各品牌分開補貨（品牌不能互相代替）</label>
+    <label class="row" style="margin-top:6px"><input type="checkbox" id="ie" ${!it||it.exp?"checked":""}> 追蹤有效日期</label><label class="row" style="margin-top:6px"><input type="checkbox" id="ic2" ${it?.loc?"checked":""}> 放樓下（不在貨架上）</label>
+    ${ks.map(k=>`<div class="card" style="margin-top:10px"><div class="row"><input type="text" data-v="${k.id}" value="${esc(k.vendor)}" data-sug="brand" placeholder="品牌（不分就留空）"><input type="number" inputmode="numeric" data-q="${k.id}" value="${k.qty}" style="width:80px;flex:none"></div>
+      <div class="row bsafe" style="margin-top:6px;${it?.sep?"":"display:none"}"><span class="mu grow">這個品牌的安全量</span><input type="number" inputmode="numeric" data-s="${k.id}" value="${k.safe??""}" placeholder="同上" style="width:80px;flex:none"></div>
+      <div class="mu" style="margin-top:6px">${k.sup?"最近供應商："+esc(k.sup)+"　":supOf(k)?"固定供應商："+esc(supOf(k))+"　":""}${D.batches.filter(b=>b.sku===k.id&&b.qty>0).map(b=>`批次 ${b.exp||"未填效期"}${b.photo?"📷":""}（${b.qty}）`).join("、")||"還沒有批次"}
+      <button class="btn s sm" data-l="${k.id}">拍標籤</button></div>
+      <div class="row wrap" style="margin-top:6px">${spotsOf(k).map(s=>`<button class="btn s sm" data-go="${s.id}">📍 ${esc(s.name)}</button>`).join("")||`<span class="mu">${it?.loc?"📍"+esc(it.loc):"沒有框"}</span>`}</div></div>`).join("")}
+    ${it?`<button class="btn s sm" id="iav" style="margin-top:8px">＋新增品牌</button>`:""}
+    <div class="row" style="margin-top:12px">${it?'<button class="btn d" id="idl">刪除</button>':""}<button class="btn s grow" id="ic">取消</button><button class="btn grow" id="io">儲存</button></div>`);
+  const commit=()=>{const n=$("in").value.trim();if(!n){alert("請輸入品名");return null}
+    if(D.items.some(i=>i.name===n&&i!==it)){alert("已有這個品項");return null}
+    const o=it||{id:uid()};Object.assign(o,{name:n,unit:$("iu").value,safe:Math.max(0,parseInt($("is").value,10)||0),exp:$("ie").checked,sep:$("isep").checked,loc:$("ic2").checked?"樓下":""});
+    if(!it){D.items.push(o);D.skus.push({id:uid(),item:o.id,vendor:"",qty:0,mode:"photo",hist:[]})}
+    for(const k of ks){k.vendor=m.querySelector(`[data-v="${k.id}"]`).value.trim();const sv=m.querySelector(`[data-s="${k.id}"]`).value.trim();if(sv==="")delete k.safe;else k.safe=Math.max(0,parseInt(sv,10)||0);const q=Math.max(0,parseInt(m.querySelector(`[data-q="${k.id}"]`).value,10)||0);if(q!==k.qty){k.qty=q;snap(k)}}
+    /* 按了「新增品牌」卻沒填名字、也沒數量 → 不留 */
+    D.skus=D.skus.filter(k=>!(k.fresh&&!k.vendor&&!k.qty&&D.skus.some(x=>x!==k&&x.item===k.item)));for(const k of D.skus)delete k.fresh;
+    save();return o};
+  $("ic").onclick=()=>{const n=D.skus.length;D.skus=D.skus.filter(k=>!(k.fresh&&!k.qty));if(D.skus.length!==n)save();m.remove();render()};
+  $("isep").onchange=()=>m.querySelectorAll(".bsafe").forEach(e=>e.style.display=$("isep").checked?"":"none");
+  $("io").onclick=()=>{if(commit()){m.remove();render()}};
+  m.querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>{if(!commit())return;m.remove();labelSheet(D.skus.find(k=>k.id===b.dataset.l),render)});
+  m.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{if(!commit())return;m.remove();openSpot(b.dataset.go)});
+  if(it){
+    $("iav").onclick=()=>{if(!commit())return;D.skus.push({id:uid(),item:it.id,vendor:"",qty:0,mode:"photo",hist:[],fresh:1});save();m.remove();itemSheet(it.id);const n=document.querySelectorAll("[data-v]");n[n.length-1]?.focus()};
+    $("idl").onclick=()=>{const used=ks.some(k=>D.spots.some(s=>s.regions.some(r=>r.sku===k.id)));if(used){alert("這個品項在拍攝點上有框，請先刪除框");return}
+      if(!confirm("刪除品項？"))return;const ids=new Set(ks.map(k=>k.id));D.items=D.items.filter(i=>i!==it);D.skus=D.skus.filter(k=>!ids.has(k.id));D.batches=D.batches.filter(b=>!ids.has(b.sku));save();m.remove();render()};
+  }
+}
+
+/* ========== 更多：備份 ========== */
+/* ========== 長輩版 ==========
+   把每個品牌的數量送到 Google 試算表（Apps Script 收件口，程式在 elder/），長輩用網頁看。
+   D.elder={url,key,sent,pend}；送不出去就留 pend，下次開 app 或連上網自動補送 */
+function elderUse(k){const c=D.counts;if(c.length<2)return"";const a=c[c.length-2],b=c[c.length-1];
+  if(a.q[k.id]==null||b.q[k.id]==null)return"";
+  const got=D.recv.filter(r=>r.d>a.d&&r.d<=b.d).flatMap(r=>r.lines).filter(l=>l.sku===k.id).reduce((s,l)=>s+l.n,0);
+  const u=a.q[k.id]-b.q[k.id]+got;return u<0?"":u}
+/* 到期日欄：「2026-03-02 5包、沒記 16包」；批次加起來比現有少的差額算「沒記」 */
+function elderExp(k){
+  if(!itemOf(k).exp)return"";/* 不追蹤有效日期的（明礬、包裝袋…）不算沒記 */
+  const bs=D.batches.filter(b=>b.sku===k.id&&b.qty>0).sort((a,b)=>(a.exp||"9")<(b.exp||"9")?-1:1);
+  const out=bs.filter(b=>b.exp).map(b=>b.exp+" "+b.qty+"包");
+  const none=bs.filter(b=>!b.exp).reduce((s,b)=>s+b.qty,0)+Math.max(0,k.qty-bs.reduce((s,b)=>s+b.qty,0));
+  if(none)out.push("沒記 "+none+"包");
+  return out.join("、");
+}
+function elderRows(){
+  const pos=new Map();for(const s of spotsSorted())for(const r of s.regions)if(!pos.has(r.sku))pos.set(r.sku,[pos.size,s.name]);
+  const hide=D.elder.hide||[];/* 不給長輩看的品項（例如包裝袋） */
+  const ks=D.skus.filter(k=>itemOf(k)&&!hide.includes(k.item)&&(k.qty>0||pos.has(k.id)));
+  const at=k=>pos.has(k.id)?pos.get(k.id)[0]:1e9;
+  ks.sort((a,b)=>at(a)-at(b)||itemOf(a).name.localeCompare(itemOf(b).name,"zh-Hant"));
+  return ks.map(k=>[pos.has(k.id)?pos.get(k.id)[1]:"",itemOf(k).name,k.vendor,k.qty,lowSku(k)?1:0,
+    elderExp(k),
+    supOf(k),elderUse(k)]);
+}
+async function elderSend(quiet){
+  const e=D.elder;if(!e||!e.url){if(!quiet)elderSetup();return}
+  e.pend=true;save();
+  try{await fetch(e.url,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify({key:e.key,d:today(),rows:elderRows()})});
+    const n=new Date();e.pend=false;e.sent=today()+" "+pad(n.getHours())+":"+pad(n.getMinutes());save();if(!quiet)toast("長輩版已更新")}
+  catch(err){if(!quiet)toast("沒有網路，連上後會自動補送")}
+  if(!document.querySelector(".modal,.sheet,.ov,#cam"))render();
+}
+/* 雲端備份：文字資料（不含照片）傳到 Google 雲端硬碟「藥材庫存備份」，一天一份、留 35 天，走長輩版的收件口。
+   資料有變才送，最多一小時一次。D.cloud.on 要等收件口換成新版才打開（舊版收到會清掉長輩版表格） */
+let _cloudSig="",_cloudBusy=false;
+async function cloudSend(){if(DEMO)return;const e=D.elder,c=D.cloud;if(!e||!e.url||!c||!c.on||!navigator.onLine||_cloudBusy)return;_cloudBusy=true;try{await cloudPost(e,c)}finally{_cloudBusy=false}}
+async function cloudPost(e,c){
+  const{cloud,...rest}=D,s=JSON.stringify(rest);if(s===_cloudSig)return;
+  try{await fetch(e.url,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify({key:e.key,kind:"backup",d:today(),data:JSON.stringify({v:2,d:D,p:{}})})});
+    _cloudSig=s;const n=new Date();c.sent=today()+" "+pad(n.getHours())+":"+pad(n.getMinutes());save()}catch(err){}}
+function elderCard(){if(DEMO)return"";const e=D.elder;if(!e||!e.url)return"";
+  return`<div class="card"><div class="row"><div class="grow"><h3>長輩版</h3><div class="mu">${e.pend?'<span class="or">還沒送出，連上網會自動補送</span>':"上次更新："+(e.sent||"還沒送過")}</div>${D.cloud&&D.cloud.on?`<div class="mu">雲端備份：${D.cloud.sent||"還沒送過"}</div>`:""}</div><button class="btn s" onclick="elderSend()">更新長輩版</button></div></div>`}
+function elderSetup(){const e=D.elder||{};
+  const m=sheet(`<h3>長輩版設定</h3><div class="mu">貼上 Google 那邊部署好的「收件口」網址和密碼。</div>
+  <label class="mu">收件口網址</label><input id="eu" value="${esc(e.url||"")}" style="width:100%">
+  <label class="mu">密碼</label><input id="ek" value="${esc(e.key||"")}" style="width:100%">
+  <div class="row" style="margin-top:10px"><button class="btn s grow" id="ex">取消</button><button class="btn grow" id="eo">存檔</button></div>`);
+  $("ex").onclick=()=>m.remove();
+  $("eo").onclick=()=>{D.elder=Object.assign(D.elder||{},{url:$("eu").value.trim(),key:$("ek").value.trim()});save();m.remove();render()}}
+addEventListener("online",()=>{if(D.elder&&D.elder.pend)elderSend(true)});
+setTimeout(()=>{if(D.elder&&D.elder.pend&&navigator.onLine)elderSend(true)},3000);
+function vMore(a){
+  a.innerHTML=`<div class="card"><h3>備份</h3><div class="mu" style="margin-bottom:8px">每次盤點完成會自動存一份到手機的「下載」資料夾（含照片）。換手機時用匯出／匯入。</div>
+  <div class="row wrap"><button class="btn" onclick="backup(false)">匯出備份</button><button class="btn s" onclick="restore()">匯入備份</button></div></div>
+  <div class="card"><h3>品名對照</h3><div class="mu" style="margin-bottom:8px">出貨單上的名稱對到哪個品項。已記 ${Object.keys(D.alias).length} 個。</div><button class="btn s" onclick="aliasSheet()">查看／修改</button></div>
+  <div class="card"><h3>示範資料</h3><div class="mu" style="margin-bottom:8px">品項、貨架、照片都是虛構的，只存在這個瀏覽器裡。</div><button class="btn s" onclick="demoReset()">重新建立示範資料</button></div>
+  <div class="card"><h3>資料</h3><div class="mu">品項 ${D.items.length}　拍攝點 ${D.spots.length}　批次 ${D.batches.length}</div><button class="btn d sm" style="margin-top:8px" onclick="wipe()">清除全部資料</button></div>
+  <div class="mu">示範版　原始碼：<a href="https://github.com/waynelim1983-afk/shelf-snap-inventory">GitHub</a></div>`;
+}
+const b2u=b=>new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.readAsDataURL(b)});
+async function backup(auto){
+  const keys=await pstore("readonly",s=>s.getAllKeys());const parts=['{"v":2,"d":',JSON.stringify(D),',"p":{'];
+  let first=true;for(const k of keys){const b=await pget(k);if(!b)continue;parts.push((first?"":",")+JSON.stringify(k)+":"+JSON.stringify(await b2u(b)));first=false}
+  parts.push("}}");
+  const url=URL.createObjectURL(new Blob(parts,{type:"application/json"}));const a=document.createElement("a");a.href=url;a.download="藥材庫存備份_"+today()+"_"+new Date().toTimeString().slice(0,5).replace(":","")+".json";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
+  if(!auto)toast("已匯出");
+}
+function restore(){pickJson(async t=>{let o;try{o=JSON.parse(t)}catch(e){alert("備份檔格式不正確");return}
+  if(o.v!==2||!o.d||!o.d.items){alert("這不是 v2 的備份檔");return}
+  if(!confirm("用備份取代目前全部資料？"))return;
+  /* 雲端那份沒有照片：手機上的照片留著 */
+  if(Object.keys(o.p||{}).length)await pstore("readwrite",s=>s.clear());for(const[k,u]of Object.entries(o.p||{})){const b=await(await fetch(u)).blob();await pstore("readwrite",s=>s.put({b,t:Date.now()},k))}
+  D=o.d;fix();save();toast("已匯入");render()})}
+function pickJson(cb){const i=document.createElement("input");i.type="file";i.accept=".json,application/json";i.onchange=()=>{const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=()=>cb(r.result);r.readAsText(f)};i.click()}
+async function wipe(){if(confirm("確定清除全部資料？無法復原")&&confirm("再確認一次")){D=blank();save();await pstore("readwrite",s=>s.clear());render()}}
+
+/* ========== 示範版 ==========
+   公開示範用：第一次打開自動建立虛構的品項、貨架和照片（照片是程式畫的）。
+   相機畫面多一個「示範照片」按鈕，沒有相機的電腦也能走完盤點、讀出貨單、讀標籤日期。
+   資料只存在這個瀏覽器裡，不會傳到任何地方。 */
+const DEMO=true;
+const DEMO_ITEMS=["黃耆","當歸","川芎","枸杞","紅棗","甘草","白芍","熟地","茯苓","黨參","陳皮","桂枝","山藥","麥門冬","五味子","杜仲","菊花","金銀花","決明子","薏苡仁","丹參","玉竹","百合","蓮子"];
+const DEMO_BRANDS=["A牌","B牌","C牌"],DEMO_SUP={"A牌":"甲藥行","B牌":"乙藥行","C牌":"丙藥行"};
+const DEMO_COLORS=["#c9b48a","#b8c4a0","#d8b0a0","#a8bcd0","#d6c07a"];
+const demoRnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+/* 一層貨架：每疊一種藥材，袋子由下往上疊，L=[{x,w,n,name}]（x、w 是畫面寬的比例） */
+function demoShelf(L){
+  const W=1200,H=1600,c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");
+  x.fillStyle="#dcd8cc";x.fillRect(0,0,W,H);
+  x.fillStyle="#8a6a45";x.fillRect(0,0,W,H*.08);x.fillRect(0,H*.9,W,H*.1);
+  /* 不會變的東西（柱子、上層板的字），對齊照片靠這些；袋子圖案重複，單靠袋子會對錯位 */
+  const MK=[.11,.17,.31,.36,.52,.6,.63,.77,.84];
+  for(let i=0;i<=L.length;i++){const px=i<L.length?L[i].x*W-16:(L[i-1].x+L[i-1].w)*W+4;x.fillStyle="#3a2c1c";x.fillRect(px,H*.08,12,H*.82);
+    x.fillStyle="#fff";MK.forEach((m,j)=>{if((i+j)%3)x.fillRect(px,H*(m+i*.013),12,H*.018)})}
+  x.fillStyle="#222";for(let i=0;i<12;i++)x.fillRect(W*(.05+i*.08),H*(.905+(i*7%5)*.012),W*.03,H*.008);
+  x.fillStyle="#f3e6c8";x.font="bold 70px sans-serif";x.textAlign="left";x.fillText("▲ 示範倉庫 ▲",W*.06,H*.06);x.fillText("◆",W*.82,H*.06);
+  const top=H*.12,bot=H*.9,bh=(bot-top)/14;
+  L.forEach((s,i)=>{const X=s.x*W,Wd=s.w*W;
+    for(let j=0;j<s.n;j++){const y=bot-(j+1)*bh;
+      x.save();x.beginPath();x.rect(X+4,y+3,Wd-8,bh-6);x.clip();x.fillStyle=DEMO_COLORS[i%DEMO_COLORS.length];x.fillRect(X+4,y+3,Wd-8,bh-6);
+      x.strokeStyle="rgba(60,40,20,.25)";x.lineWidth=5;for(let d=-bh;d<Wd+bh;d+=16){x.beginPath();x.moveTo(X+d,y);x.lineTo(X+d+bh,y+bh);x.stroke()}
+      x.restore();x.strokeStyle="#4a3a24";x.lineWidth=4;x.strokeRect(X+4,y+3,Wd-8,bh-6);
+      x.fillStyle="#fff";x.fillRect(X+Wd*.15,y+bh*.25,Wd*.7,bh*.5);x.fillStyle="#222";x.font=`bold ${Math.round(bh*.36)}px sans-serif`;x.textAlign="center";x.fillText(s.name,X+Wd/2,y+bh*.62)}
+    x.fillStyle="#fff";x.fillRect(X+10,H*.925,Wd-20,H*.05);x.fillStyle="#222";x.font=`${Math.round(H*.026)}px sans-serif`;x.textAlign="center";x.fillText(s.name,X+Wd/2,H*.958)});
+  return c}
+/* 出貨單：單號、客戶、品名／數量、合計 */
+function demoSlip(){
+  const W=1200,H=1600,c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");
+  x.fillStyle="#fbfaf6";x.fillRect(0,0,W,H);x.fillStyle="#111";x.textAlign="left";
+  x.font="bold 64px sans-serif";x.fillText("示範藥行　出貨單",250,140);
+  x.font="44px sans-serif";x.fillText("單號："+(50000000+demoRnd(1,9999999)),90,250);x.fillText("客戶：示範中藥房",90,330);
+  x.fillText("日期："+today(),700,250);
+  x.font="bold 48px sans-serif";x.fillText("品名",150,450);x.fillText("數量",820,450);
+  x.fillRect(80,480,W-160,4);
+  const ks=D.skus.filter(k=>D.spots.some(s=>s.regions.some(r=>r.sku===k.id))).sort(()=>Math.random()-.5).slice(0,5);
+  x.font="46px sans-serif";
+  ks.forEach((k,i)=>{const y=570+i*95;x.fillText(String(i+1),90,y);x.fillText(itemOf(k).name,150,y);x.fillText(demoRnd(1,3)+"斤",820,y)});
+  const y=570+ks.length*95;x.fillRect(80,y-40,W-160,3);x.font="bold 46px sans-serif";x.fillText("合計",150,y+40);
+  return c}
+/* 標籤：製造日期＋有效日期 */
+function demoLabel(){
+  const W=1200,H=900,c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");
+  x.fillStyle="#f4efe2";x.fillRect(0,0,W,H);x.strokeStyle="#7a5a30";x.lineWidth=8;x.strokeRect(30,30,W-60,H-60);
+  const m=new Date();m.setMonth(m.getMonth()-demoRnd(1,10));const mfg=ymd(m),e=new Date(m);e.setFullYear(e.getFullYear()+3);e.setDate(e.getDate()-1);
+  const f=s=>s.replace(/-/g,".");x.fillStyle="#222";x.textAlign="left";
+  x.font="bold 80px sans-serif";x.fillText("示範藥材",90,170);
+  x.font="56px sans-serif";x.fillText("淨重：600g",90,320);x.fillText("製造日期："+f(mfg),90,450);x.fillText("有效日期："+f(ymd(e)),90,580);x.fillText("批號：DEMO"+demoRnd(100,999),90,710);
+  return c}
+let _demoSpot=null;
+/* 盤點的示範照片：每疊隨機少 0–3 袋（像出了一週貨） */
+async function demoShot(kind){
+  if(kind==="slip")return demoSlip();
+  if(kind==="label")return demoLabel();
+  const sp=_demoSpot&&D.spots.includes(_demoSpot)?_demoSpot:null;
+  if(!sp||!sp.demo)return demoShelf([{x:.06,w:.26,n:demoRnd(3,10),name:"新品項"},{x:.38,w:.26,n:demoRnd(3,10),name:"新品項"}]);
+  for(const s of sp.demo)s.n=s.n>1?s.n-demoRnd(0,Math.min(3,s.n-1)):s.n+demoRnd(4,8);save();
+  return demoShelf(sp.demo)}
+async function demoSeed(){
+  const m=sheet(`<h3>建立示範資料…</h3><div class="mu">第一次打開會畫幾張貨架照片，大約幾秒鐘。</div>`);
+  try{
+    D=blank();fix();const t=today();
+    const ks=DEMO_ITEMS.map((n,i)=>{const it={id:uid(),name:n,unit:"包",safe:5,exp:true,loc:i>=20?"樓下":""};D.items.push(it);
+      const vendor=DEMO_BRANDS[i%3];return{id:uid(),item:it.id,vendor,sup:DEMO_SUP[vendor],qty:0,mode:"photo",hist:[]}});
+    D.skus.push(...ks);D.supBrand=Object.fromEntries(Object.entries(DEMO_SUP).map(([b,s])=>[s,b]));
+    for(let s=0;s<4;s++){
+      const L=[0,1,2,3,4].map(j=>{const k=ks[s*5+j];return{x:.03+j*.194,w:.17,n:demoRnd(2,12),name:itemOf(k).name,sku:k.id}});
+      const c=demoShelf(L),pid=await pput(await cBlob(c,.85)),G=gray(c,MEASURE_W);
+      const regions=L.map(l=>{const r={id:uid(),x:l.x,y:.12,w:l.w,h:.78,sku:l.sku,rows:1,front:l.n,back:0,cols:1};setBase(G,r);return r});
+      for(const l of L){const k=ks.find(x=>x.id===l.sku);k.qty=l.n}
+      D.spots.push({id:uid(),name:"貨架 "+"AB"[s>>1]+"-"+(s%2+1),ord:s+1,photo:pid,regions,conf:addDays(t,-7),land:false,demo:L});
+      await new Promise(r=>setTimeout(r,10))}
+    for(const k of ks.slice(20))k.qty=demoRnd(4,15);
+    /* 歷史：過去三週每週少一點，看得出用量；幾批快到期 */
+    for(const k of ks){k.hist=[3,2,1].map(w=>({d:addDays(t,-7*w),q:k.qty+w*demoRnd(0,2)}));
+      D.batches.push({id:uid(),sku:k.id,qty:k.qty,exp:addDays(t,demoRnd(1,10)<3?demoRnd(20,150):demoRnd(300,1000)),photo:"",d:addDays(t,-30)})}
+    D.counts=[3,2,1].map(w=>({d:addDays(t,-7*w),q:Object.fromEntries(ks.map(k=>[k.id,k.hist[3-w].q]))}));D.lastCount=addDays(t,-7);
+    /* 出貨單上的寫法：教過三個，其他第一次會問 */
+    for(const k of ks.slice(0,3))D.alias[itemOf(k).name]={sku:k.id,per:1,u:"斤"};
+    D.recv.push({id:uid(),d:addDays(t,-10),sup:"甲藥行",photos:[],lines:ks.slice(0,2).map(k=>({sku:k.id,n:6,batch:D.batches.find(b=>b.sku===k.id).id}))});
+    D.demoV=1;save();render();toast("示範資料建好了");
+  }catch(e){alert("建立示範資料失敗："+e.message)}finally{m.remove()}}
+async function demoReset(){if(!confirm("清掉目前的資料，重新建立示範資料？"))return;await pstore("readwrite",s=>s.clear());await demoSeed()}
+
+/* ========== 啟動 ========== */
+fix();save();render();
+if(DEMO&&!D.items.length)setTimeout(demoSeed,300);
+if(D.slipQ.some(q=>q.st==="wait"))setTimeout(slipWork,3000);
+setTimeout(cloudSend,8000);setInterval(cloudSend,36e5);addEventListener("online",()=>setTimeout(cloudSend,5000));
+try{screen.orientation.lock("portrait").catch(()=>{})}catch(e){}
+if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js");
+  /* 新版 sw 接手後才有多執行緒要的標頭；App 閒著就重開一次，正在操作就等下次打開 */
+  navigator.serviceWorker.addEventListener("controllerchange",()=>{if(!crossOriginIsolated&&!document.querySelector(".modal,.sheet,.ov,#cam"))location.reload()})}
+</script>
+</body>
+</html>
